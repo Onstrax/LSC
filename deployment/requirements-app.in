@@ -1,0 +1,15 @@
+# Dependencias de la APLICACIÓN de Juan (interfaz + API + despliegue).
+# Juan entrega este archivo; Acosta lo integra en el lock compartido del
+# repositorio (pyproject.toml / lockfile) sin cambiar su significado.
+#
+# Mantener acotado: NO incluye TensorFlow/Keras ni MediaPipe. Esos pesados
+# vienen de los módulos de Acosta (src/lsc_inference) y Ortiz (src/lsc_features)
+# y se instalan mediante el lock raíz. En modo `mock` la aplicación funciona
+# sólo con lo siguiente.
+
+fastapi>=0.111,<1.0        # framework del servicio y OpenAPI
+uvicorn[standard]>=0.30    # servidor ASGI
+pydantic>=2.7,<3.0         # modelos de petición/respuesta y validación
+python-multipart>=0.0.9    # parseo de multipart/form-data
+pillow>=10.3               # verificación/decodificación de JPEG
+numpy>=1.26                # formación de lotes (6,147) y dobles de prueba

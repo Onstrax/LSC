@@ -1,0 +1,21 @@
+{
+  "schema_version": "lsc.http.v1",
+  "request_id": "11111111-1111-4111-8111-111111111111",
+  "client_request_id": "22222222-2222-4222-8222-222222222222",
+  "status": "accepted",
+  "label_id": 0,
+  "display_text": "Hola",
+  "confidence": 0.87,
+  "reason_codes": [],
+  "model_version": "mock-model-0.0.0",
+  "feature_spec_hash": "mock-feature-spec-0000",
+  "capture_protocol_version": "lsc.capture.v1",
+  "mode": "mock",
+  "timings_ms": {
+    "decode": 3.1,
+    "extraction": 44.2,
+    "inference": 9.8,
+    "decision": 0.4,
+    "server_total": 61.5
+  }
+}

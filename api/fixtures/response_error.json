@@ -1,0 +1,21 @@
+{
+  "schema_version": "lsc.http.v1",
+  "request_id": "55555555-5555-4555-8555-555555555555",
+  "client_request_id": null,
+  "status": "error",
+  "label_id": null,
+  "display_text": null,
+  "confidence": null,
+  "reason_codes": ["CONTRACT_VIOLATION"],
+  "model_version": null,
+  "feature_spec_hash": null,
+  "capture_protocol_version": null,
+  "mode": "mock",
+  "timings_ms": {
+    "decode": null,
+    "extraction": null,
+    "inference": null,
+    "decision": null,
+    "server_total": null
+  }
+}

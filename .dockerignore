@@ -1,0 +1,22 @@
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.git/
+tests/
+docs/presentation/
+reports/
+data/
+pilot/
+consents/
+*.mp4
+*.mov
+*.docx
+test-results/
+playwright-report/
+release_app.json
+dist/
+release/
+# Los artefactos NO se copian a la imagen: se montan en solo lectura por compose.
+artifacts/

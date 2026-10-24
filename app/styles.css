@@ -1,0 +1,209 @@
+/* Diseño accesible (SDD §13).
+   - Contraste de texto >= 4,5:1, objetivos táctiles amplios, foco visible.
+   - Mensajes que no dependen únicamente del color.
+   - Comprobado a 1280x720, zoom 200 % y ancho estrecho de 360 px. */
+
+:root {
+  --bg: #0f1115;
+  --surface: #1a1d24;
+  --surface-2: #232733;
+  --text: #f2f4f8;        /* contraste alto sobre fondos oscuros */
+  --muted: #c3c9d4;
+  --primary: #3d7bff;
+  --primary-text: #ffffff;
+  --accepted: #1f7a4d;
+  --retry: #9a6a00;
+  --error: #b23c3c;
+  --focus: #ffd23f;
+  --radius: 10px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+}
+
+/* Rótulo de modo de prueba */
+.banner {
+  background: #6a3d00;
+  color: #fff6e6;
+  padding: 0.6rem 1rem;
+  text-align: center;
+  font-weight: 700;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.skip-link {
+  position: absolute;
+  left: -999px;
+}
+.skip-link:focus {
+  left: 1rem;
+  top: 1rem;
+  background: var(--primary);
+  color: var(--primary-text);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius);
+  z-index: 20;
+}
+
+.app-header {
+  padding: 1.5rem 1rem 0.5rem;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.app-header h1 { font-size: 1.6rem; margin: 0 0 0.3rem; }
+.lead { color: var(--muted); margin: 0; }
+
+.layout {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1rem;
+  max-width: 1100px;
+  margin: 1rem auto;
+  padding: 0 1rem;
+}
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--surface-2);
+  border-radius: var(--radius);
+  padding: 1rem;
+}
+.panel h2 { margin-top: 0; font-size: 1.1rem; }
+
+.hint { color: var(--muted); font-size: 0.95rem; }
+
+.vocab {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.vocab li {
+  background: var(--surface-2);
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+}
+
+.video-wrap {
+  position: relative;
+  background: #000;
+  border-radius: var(--radius);
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+}
+.preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+/* Espejo SÓLO visual; no afecta a los bytes enviados. */
+.preview.mirrored { transform: scaleX(-1); }
+
+.countdown {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 5rem;
+  font-weight: 800;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.45);
+}
+/* El atributo [hidden] debe ganar a la clase .countdown (misma propiedad
+   display). Sin esto, el overlay "¡Ya!" permanece visible. */
+.countdown[hidden] {
+  display: none;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.8rem;
+}
+
+.btn {
+  font: inherit;
+  min-height: 44px;              /* objetivo táctil amplio */
+  padding: 0.55rem 1.1rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--surface-2);
+  background: var(--surface-2);
+  color: var(--text);
+  cursor: pointer;
+}
+.btn.primary { background: var(--primary); color: var(--primary-text); border-color: var(--primary); }
+.btn.ghost { background: transparent; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn:focus-visible,
+select:focus-visible,
+a:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.result { border-radius: var(--radius); padding: 0.8rem; }
+.result-label { font-weight: 700; margin: 0 0 0.3rem; }
+/* El borde izquierdo refuerza el estado sin depender sólo del color. */
+.result.accepted { border-left: 6px solid var(--accepted); }
+.result.retry { border-left: 6px solid var(--retry); }
+.result.error { border-left: 6px solid var(--error); }
+
+.suggestion { font-size: 2rem; font-weight: 800; margin: 0.2rem 0; }
+.note { color: var(--muted); font-size: 0.9rem; }
+
+.correction {
+  margin-top: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+select {
+  font: inherit;
+  min-height: 44px;
+  padding: 0.4rem;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--surface-2);
+}
+
+.history { list-style: none; padding: 0; margin: 0.5rem 0; }
+.history li {
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--surface-2);
+}
+
+.app-footer {
+  color: var(--muted);
+  text-align: center;
+  padding: 1.5rem 1rem;
+  font-size: 0.9rem;
+}
+
+/* Región sólo para lectores de pantalla. */
+.sr-live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (max-width: 420px) {
+  .controls { flex-direction: column; }
+  .btn { width: 100%; }
+}

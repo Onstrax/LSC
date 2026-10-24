@@ -1,0 +1,34 @@
+# Entornos
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Artefactos de modelo/extractor (propiedad de Acosta/Ortiz; NO versionar aquí)
+# Se conserva el README que documenta qué va en esta carpeta.
+artifacts/*
+!artifacts/README.md
+*.keras
+*.task
+
+# Datos personales, consentimientos, grabaciones (NUNCA en Git)
+data/
+pilot/
+consents/
+*.mp4
+*.mov
+
+# Evidencias con posibles identidades (se conservan fuera del repo)
+reports/app/*_private*
+
+# Salidas de empaquetado
+dist/
+release/
+release_app.json
+
+# Playwright
+test-results/
+playwright-report/
+
+# Varios

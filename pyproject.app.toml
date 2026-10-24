@@ -1,0 +1,23 @@
+# Configuración PROPUESTA por Juan para su módulo de aplicación.
+#
+# NOTA DE PROPIEDAD: el pyproject.toml raíz, el lockfile y la CI raíz pertenecen
+# a Acosta (ver AGENTS.md). Este archivo auxiliar documenta la configuración que
+# Juan solicita integrar (pytest markers, metadatos de la app). No sustituye al
+# pyproject raíz; se entrega como propuesta para fusión.
+
+[project]
+name = "lsc-app"
+version = "0.1.0"
+description = "Aplicación web local de reconocimiento de señas aisladas de LSC (módulo de Juan Esteban)"
+requires-python = ">=3.11"
+authors = [{ name = "Juan Esteban Álvarez García" }]
+
+[tool.pytest.ini_options]
+# Marcas para separar pruebas que requieren artefactos reales.
+markers = [
+  "realmodel: requiere model.keras + .task reales (excluir en CI rápida)",
+  "e2e: pruebas de navegador con Playwright",
+  "slow: pruebas lentas (latencia, sesiones prolongadas)",
+]
+testpaths = ["tests/app", "tests/e2e"]
+addopts = "-ra"

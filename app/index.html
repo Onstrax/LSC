@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>LSC · Reconocimiento de señas aisladas</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <!-- Rótulo persistente de modo de prueba (sólo en modo mock). -->
+    <div id="banner" class="banner" role="status" hidden></div>
+
+    <a class="skip-link" href="#main">Saltar al contenido</a>
+
+    <header class="app-header">
+      <h1>Reconocimiento de señas aisladas de LSC</h1>
+      <p class="lead">
+        Capture <strong>una seña</strong> del vocabulario admitido y el sistema
+        sugerirá una etiqueta. No traduce conversaciones ni compone oraciones.
+      </p>
+    </header>
+
+    <main id="main" class="layout">
+      <section class="panel" aria-labelledby="vocab-title">
+        <h2 id="vocab-title">Vocabulario admitido (10 señas)</h2>
+        <ul id="vocabList" class="vocab"></ul>
+        <p class="hint">
+          Encuadre <strong>rostro, hombros y manos</strong>. Las instrucciones y
+          la cuenta regresiva son visuales; no necesita sonido.
+        </p>
+      </section>
+
+      <section class="panel" aria-labelledby="capture-title">
+        <h2 id="capture-title">Captura</h2>
+        <div class="video-wrap">
+          <!-- Vista previa espejada por CSS; los bytes enviados no van espejados. -->
+          <video id="video" class="preview mirrored" playsinline muted
+                 aria-label="Vista previa de la cámara"></video>
+          <div id="countdown" class="countdown" role="status" aria-live="assertive" hidden></div>
+        </div>
+        <div class="controls">
+          <button id="activateBtn" type="button" class="btn primary">
+            Activar cámara
+          </button>
+          <button id="captureBtn" type="button" class="btn" disabled>
+            Capturar seña
+          </button>
+          <button id="stopBtn" type="button" class="btn ghost" disabled>
+            Detener cámara
+          </button>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="result-title">
+        <h2 id="result-title">Resultado</h2>
+
+        <div id="resultAccepted" class="result accepted" hidden>
+          <p class="result-label">Seña sugerida</p>
+          <p id="suggestionText" class="suggestion"></p>
+          <p id="vocabNote" class="note"></p>
+          <div class="controls">
+            <button id="confirmBtn" type="button" class="btn primary">Confirmar</button>
+            <button id="correctBtn" type="button" class="btn">Corregir</button>
+            <button id="repeatBtn" type="button" class="btn ghost">Repetir</button>
+          </div>
+          <div id="correctionPanel" class="correction" hidden>
+            <label for="correctSelect">Seleccione la seña correcta</label>
+            <select id="correctSelect"></select>
+            <button id="applyCorrectionBtn" type="button" class="btn">
+              Guardar corrección
+            </button>
+          </div>
+        </div>
+
+        <div id="resultRetry" class="result retry" hidden>
+          <p class="result-label">Repita el intento</p>
+          <p id="retryMsg"></p>
+          <button id="repeatBtnRetry" type="button" class="btn" onclick="document.getElementById('captureBtn').focus()">
+            Entendido
+          </button>
+        </div>
+
+        <div id="resultError" class="result error" hidden>
+          <p class="result-label">No se pudo completar</p>
+          <p id="errorMsg"></p>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="history-title">
+        <h2 id="history-title">Historial del intento</h2>
+        <p class="hint">
+          Hasta 20 intentos en memoria de esta pestaña. Recargar borra el
+          historial. No se guardan imágenes.
+        </p>
+        <ul id="historyList" class="history"></ul>
+        <div class="controls">
+          <button id="clearHistoryBtn" type="button" class="btn ghost">
+            Limpiar historial
+          </button>
+          <button id="exportBtn" type="button" class="btn ghost">
+            Exportar latencias (CSV)
+          </button>
+        </div>
+      </section>
+    </main>
+
+    <!-- Región aria-live para anuncios de estado. -->
+    <div id="status" class="sr-live" role="status" aria-live="polite"></div>
+
+    <footer class="app-footer">
+      <p>
+        Proyecto LSC · Universidad de los Andes · Módulo de aplicación local.
+        El reconocimiento proviene de los componentes del equipo.
+      </p>
+    </footer>
+
+    <script type="module" src="/static/js/main.js"></script>
+  </body>
+</html>

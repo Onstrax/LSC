@@ -1,0 +1,11 @@
+# Dependencias de desarrollo y pruebas del módulo de Juan.
+# Fijadas y documentadas; no introducen un segundo entorno de Python
+# incompatible. Las pruebas de navegador (Playwright) NO se añaden a la imagen
+# de ejecución; se instalan sólo en el entorno de desarrollo.
+
+-r requirements-app.txt
+
+pytest>=8.2
+httpx>=0.27            # cliente de pruebas para FastAPI TestClient
+playwright>=1.44       # pruebas e2e de navegador (tests/e2e)
+pytest-playwright>=0.5 # integración pytest + Playwright

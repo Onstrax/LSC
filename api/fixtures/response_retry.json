@@ -1,0 +1,21 @@
+{
+  "schema_version": "lsc.http.v1",
+  "request_id": "33333333-3333-4333-8333-333333333333",
+  "client_request_id": "44444444-4444-4444-8444-444444444444",
+  "status": "retry",
+  "label_id": null,
+  "display_text": null,
+  "confidence": null,
+  "reason_codes": ["INSUFFICIENT_HANDS"],
+  "model_version": "mock-model-0.0.0",
+  "feature_spec_hash": "mock-feature-spec-0000",
+  "capture_protocol_version": "lsc.capture.v1",
+  "mode": "mock",
+  "timings_ms": {
+    "decode": 2.9,
+    "extraction": 40.1,
+    "inference": null,
+    "decision": null,
+    "server_total": 44.0
+  }
+}

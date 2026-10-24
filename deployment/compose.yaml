@@ -1,0 +1,46 @@
+# Despliegue local reproducible (SDD §14).
+#
+# - Publica SOLO en loopback: 127.0.0.1:8000:8000 (evita exponerse en todas las
+#   interfaces). El navegador abre http://localhost:8000.
+# - Monta modelos y configuración en SOLO LECTURA.
+# - Sin modo privilegiado, sin red del host, sin montar /dev/video: la cámara
+#   permanece en el navegador del anfitrión.
+# - Temporales efímeros mediante tmpfs.
+
+services:
+  lsc-app:
+    build:
+      context: ..
+      dockerfile: deployment/Dockerfile
+    image: lsc-app:local
+    container_name: lsc-app
+    # Loopback explícito: no publicar en 0.0.0.0 del host.
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      LSC_MODE: "${LSC_MODE:-real}"
+      LSC_ARTIFACTS_DIR: "/artifacts"
+      LSC_HOST: "0.0.0.0"
+      LSC_PORT: "8000"
+      LSC_ALLOWED_ORIGINS: "http://localhost:8000,http://127.0.0.1:8000"
+      LSC_ALLOWED_HOSTS: "localhost,127.0.0.1"
+    volumes:
+      # Artefactos de Acosta (modelo) y Ortiz (.task) en SOLO LECTURA.
+      # Prepare la ruta ./artifacts en el host antes de arrancar en modo real.
+      - type: bind
+        source: ../artifacts
+        target: /artifacts
+        read_only: true
+    tmpfs:
+      # Temporales de parseo de multipart efímeros; no persisten imágenes.
+      - /tmp
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/api/v1/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s

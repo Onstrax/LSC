@@ -1,0 +1,13 @@
+# Dependencias de ejecución de la aplicación (pin suave para instalación local).
+# Generado a partir de requirements-app.in. En el repositorio final, Acosta
+# congela las versiones exactas en el lock compartido tras la prueba de
+# compatibilidad con MediaPipe y TensorFlow/Keras.
+#
+#   pip install -r deployment/requirements-app.txt
+
+fastapi>=0.111,<1.0
+uvicorn[standard]>=0.30
+pydantic>=2.7,<3.0
+python-multipart>=0.0.9
+pillow>=10.3
+numpy>=1.26

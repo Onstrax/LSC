@@ -1,0 +1,1 @@
+attempt_id,source,mode,api_version,model_version,feature_spec_hash,capture_protocol_version,integral_ms,select_encode_ms,http_wait_ms,visual_update_ms,server_total_ms,decode_ms,extraction_ms,inference_ms,decision_ms,status,reason_codes,is_warmup,timed_out
