@@ -1,0 +1,30 @@
+# Procedencia del corpus real (design §7). NO contiene credenciales ni URLs de
+# descarga automática: `acquire` NUNCA descarga por red (bloque DO02). Con
+# `--archive <ruta>` se valida un archivo local contra estos valores esperados
+# (SHA-256 y tamaño) y se extrae de forma segura.
+#
+# Mientras no se congele la procedencia del archivo real, expected_sha256 y
+# expected_size_bytes quedan en null: `acquire --archive` con valores null
+# rechaza la validación (config inválido, exit 2) en vez de aceptar cualquier
+# archivo. Esto evita un fallback silencioso (AGENTS.md regla 3).
+
+schema_version: lsc.source.v1
+name: LSC70W
+doi: 10.17632/9ssyn8tff5.2
+url: https://data.mendeley.com/datasets/9ssyn8tff5/2
+version: "2"
+subset: LSC70W
+
+# Procedencia esperada del archivo (se completa al congelar el corpus real).
+expected_sha256: null
+expected_size_bytes: null
+
+# Extensiones permitidas al extraer (design §7.2). Cualquier entrada con otra
+# extensión (p. ej. ejecutables) hace rechazar el archivo completo.
+allowed_extensions:
+  - .jpg
+  - .jpeg
+  - .png
+  - .txt
+  - .csv
+  - .json

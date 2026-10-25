@@ -1,0 +1,37 @@
+# Gramática carpeta/nombre del corpus LSC70W (design §9).
+#
+# El adapter (src/lsc_data/adapter_lsc70w.py) construye una regex NOMBRADA a
+# partir de este archivo. La regex DEBE exponer los grupos nombrados
+# signer_id, class_label, repetition_id y frame_index. Si la regex no casa una
+# ruta candidata, el adapter FALLA con un mensaje accionable; nunca adivina
+# (design §9).
+#
+# Como todavía no hay ejemplos del corpus real, este patrón es un SUPUESTO que
+# se documenta en docs/data/corpus-grammar-assumption.md y se verifica contra
+# el corpus real cuando DO02 se desbloquee. El corpus no declara repeticiones,
+# por lo que repetition_id es opcional y por defecto 0 (design §9).
+
+schema_version: lsc.lsc70w.v1
+source: LSC70W
+source_version: lsc70_v2
+subset: LSC70W            # sólo se procesa el subset declarado (design §7.6)
+
+# Grupos nombrados obligatorios: signer_id, class_label, frame_index.
+# repetition_id es opcional; si la ruta no lo aporta, se usa default_repetition_id.
+path_regex: '^(?P<signer_id>S\d{3})/(?P<class_label>[a-z]+)(?:/(?P<repetition_id>\d+))?/frame_(?P<frame_index>\d+)\.jpg$'
+default_repetition_id: 0
+
+# Mapa etiqueta-de-carpeta -> class_id. El ORDEN de class_id es canónico y NO se
+# infiere de os.listdir ni alfabéticamente (design §4.1). Fuente de verdad del
+# texto: contracts/labels.json.
+label_map:
+  hola: 0
+  buenos: 1
+  dias: 2
+  tardes: 3
+  noches: 4
+  yo: 5
+  nombre: 6
+  anos: 7
+  gustar: 8
+  licor: 9
