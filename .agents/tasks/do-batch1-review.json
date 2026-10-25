@@ -1,0 +1,17 @@
+{
+  "verdict": "APPROVED",
+  "findings": [
+    {
+      "severity": "NIT",
+      "location": ".gitignore:16 (data/ -> /data/)",
+      "detail": "El lote incluye un cambio en .gitignore (ancla 'data/' a '/data/'), ruta que AGENTS.md no asigna a Ortiz. El cambio es correcto y necesario: sin el ancla el patron 'data/' tragaba configs/data/, reports/data/, docs/data/ y tests/data/ (entregables versionables). FEAT-005 lo documenta como decision del dueno (el usuario), no como reclamo de propiedad de Ortiz. Verificado con git check-ignore: los entregables NO quedan ignorados y data/raw|interim|processed y artifacts/data/ siguen ignorados (§21 preservada). Sin accion requerida; solo se deja constancia de que la edicion recae en ruta ajena.",
+      "fix": "Dejar constancia de que .gitignore es del dueno del repo (no de Ortiz) y que el ancla fue decision suya; ninguna correccion de codigo necesaria."
+    },
+    {
+      "severity": "NIT",
+      "location": "tests/contracts/test_requirements_version.py:61 (skip Python 3.11)",
+      "detail": "1 prueba se salta porque el entorno es Python 3.13.2 y el diseno (§22) ancla 3.11. Es un skip previsto por diseno (no fabrica un rojo ajeno al codigo de Ortiz); la suite canonica queda verde (77 passed, 1 skipped). La congelacion a 3.11 ocurrira cuando Acosta fusione el lock raiz (bloque DO11).",
+      "fix": "Ninguna accion en este lote; la verificacion efectiva de 3.11 se activa al fusionar el lock raiz de Acosta."
+    }
+  ]
+}

@@ -13,7 +13,7 @@ artifacts/*
 *.task
 
 # Datos personales, consentimientos, grabaciones (NUNCA en Git)
-data/
+/data/
 pilot/
 consents/
 *.mp4

@@ -1,0 +1,46 @@
+# Configuración versionada del extractor de características v1
+# (design §11/§12/§14). La consume FeatureExtractor(config, model_paths) y la
+# CLI `features`. El bloque `quality_rules` espeja el de contracts/feature_spec.json
+# (fuente del feature_spec_hash); este YAML añade además la política de augment
+# y los bloques de versiones del detector (pendientes hasta DO05).
+#
+# IMPORTANTE (AGENTS.md regla 3, sin fallback silencioso): `use_presence` por
+# defecto es false. detector_versions y model_asset_hashes quedan vacíos/null
+# (bloque DO05): el camino real NO se ejercita en este lote.
+
+schema_version: lsc.feature_spec.v1
+feature_version: features_v1
+
+# Reglas de calidad y umbrales (design §11/§12/§13). Espejo de feature_spec.json.
+quality_rules:
+  use_presence: false                     # defecto; la ausencia del campo presence no invalida (design §11)
+  visibility_threshold: 0.5               # umbral de visibilidad del landmark (design §11)
+  presence_threshold: 0.5                 # umbral de presencia si el campo existe (design §11)
+  min_shoulder_distance_frac_width: 0.08  # distancia mínima de hombros = 0.08*W (design §12.2)
+  min_valid_shoulder_frames: 5            # hombros válidos en >=5 cuadros (design §13)
+  min_hand_frames: 4                      # >=1 mano asociada en >=4 cuadros (design §13)
+  max_people: 1                           # >1 persona -> MULTIPLE_PEOPLE (design §11)
+  geometry_outlier_abs: 10.0              # |valor| > 10 -> GEOMETRY_OUTLIER (design §12.6)
+  hand_association_cost_max: 0.6          # enlaces con costo > 0.6 se descartan (design §11)
+  hand_association_ambiguous_gap: 0.05    # gap < 0.05 -> HAND_ASSOCIATION_AMBIGUOUS (design §11)
+
+# Política de augmentation de entrenamiento `train_v1` (design §14). Sólo la usa
+# el loader de entrenamiento; val/test/producción NUNCA aplican augmentation.
+augment:
+  policy: train_v1
+  rotation:
+    probability: 0.5
+    max_degrees: 5.0        # ángulo uniforme en [-5°, +5°] alrededor del origen normalizado
+  gaussian_noise:
+    probability: 0.5
+    std: 0.005              # unidades de hombro; sólo donde m=1
+
+# Versiones y hashes de los detectores MediaPipe Tasks. Vacíos/pendientes hasta
+# DO05 (procedencia verificable de los .task). Entran al feature_spec_hash, de
+# modo que registrarlos cambia el hash (design §19/§24 DO05).
+detector_versions:
+  pose: null
+  hands: null
+model_asset_hashes:
+  pose: null
+  hands: null

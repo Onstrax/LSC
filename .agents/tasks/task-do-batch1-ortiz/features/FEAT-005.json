@@ -1,0 +1,31 @@
+{
+  "id": "FEAT-005",
+  "type": "chore",
+
+  "description": "DO01 configuracion versionada, dependencias entregadas a Acosta, reports y documentacion: configs/data/*.yaml, deployment/requirements-data.in, reports/data/, docs/data/* y docs/article/data.md; verificacion de .gitignore. Depende de FEAT-001..004 (las configs las consumen la CLI y las pruebas; requirements lo valida test_requirements_version.py).",
+  "status": "completed",
+  "steps": [
+    "Crear configs/data/source.yaml (design §7): procedencia URL, DOI 10.17632/9ssyn8tff5.2, version, SHA-256 y tamano esperados, lista de extensiones permitidas; subsets LSC70AN/LSC70ANH separados de LSC70W (el adapter solo procesa el subset declarado).",
+    "Crear configs/data/lsc70w.yaml (design §9): regex nombrada con grupos signer_id, class_label, repetition_id, frame_index; label_map a class_id 0..9; repetition_id=0 por defecto si el corpus no tiene repeticiones.",
+    "Crear configs/data/features_v1.yaml (design §11/§12/§14): quality_rules.use_presence=false por defecto; umbrales de deteccion/presencia 0.5; distancia de hombros minima 0.08*W; politica de augment train_v1 (rot +/-5 prob 0.5, ruido std 0.005 prob 0.5); detector_versions y model_asset_hashes vacios/pendientes (bloque DO05).",
+    "Crear deployment/requirements-data.in (design §22, UNICO archivo nuevo permitido bajo deployment/): numpy, opencv-python-headless, mediapipe, pydantic>=2, jsonschema, PyYAML, pytest con versiones ancladas.",
+    "Crear reports/data/.gitkeep y reports/data/README.md (design §3: inventory.csv y reportes se generan aqui; algunos git-excluidos).",
+    "Crear docs/data/README.md con el comando canonico python -m pytest tests/data tests/features tests/contracts (design §23); docs/data/progreso-DO.md (bitacora de cierre por DO: id, cambio, archivo de salida, comando de verificacion, conteos medidos, riesgo/bloque); docs/data/corpus-grammar-assumption.md (supuesto de gramatica LSC70W a verificar contra el corpus real); docs/data/blocks.md (DO02, DO05, DO07, DO08, DO09, DO10, DO11 con instrucciones exactas de desbloqueo, design §24).",
+    "Crear docs/article/data.md (design §24 DO10): estructura de la seccion de datos del articulo SIN metricas inventadas.",
+    "Verificar .gitignore (design §21): NO anadir patrones (data/ y artifacts/* ya ignorados); a lo sumo un comentario. Confirmar que contracts/, los fixtures sinteticos, src/, configs/data/, tests/**, docs/data/, reports/data/README.md y deployment/requirements-data.in NO caen bajo ninguna exclusion."
+  ],
+  "acceptance_criteria": [
+    "Los tres YAML de configs/data cargan con yaml.safe_load sin error; features_v1.yaml tiene quality_rules.use_presence=false.",
+    "deployment/requirements-data.in existe, lista las 7 dependencias con versiones ancladas y es consumido por test_requirements_version.py.",
+    "git check-ignore sobre contracts, contracts/fixtures/SYNTHETIC_valid_sample.jsonl, src/lsc_data y deployment/requirements-data.in no reporta ninguno como ignorado.",
+    "docs/data/blocks.md documenta los 7 bloques (DO02,DO05,DO07,DO08,DO09,DO10,DO11) con desbloqueo exacto.",
+    "python -m pytest tests/data tests/features tests/contracts sigue verde tras instalar requirements-data.in."
+  ],
+  "verification": [
+    "python -c \"import yaml,glob; cfgs={__import__('os').path.basename(p): yaml.safe_load(open(p,encoding='utf-8')) for p in glob.glob('configs/data/*.yaml')}; assert cfgs['features_v1.yaml']['quality_rules']['use_presence'] is False; print('configs ok')\"",
+    "git -C c:\\Users\\danie\\Documents2\\LSC check-ignore contracts contracts/fixtures/SYNTHETIC_valid_sample.jsonl src/lsc_data deployment/requirements-data.in; echo done",
+    "python -m pytest tests/data tests/features tests/contracts"
+  ],
+  "blocked_reason": null,
+  "findings": "FEAT-005 implementado y verificado (sin commit; el usuario revisa y commitea). NUEVOS: configs/data/features_v1.yaml (quality_rules espejo de feature_spec.json con use_presence=false, augment train_v1, detector_versions/model_asset_hashes null pendiente DO05); reports/data/.gitkeep, reports/data/README.md, reports/data/do-batch1-report.md; docs/data/progreso-DO.md, docs/data/corpus-grammar-assumption.md, docs/data/blocks.md; docs/article/data.md (sin metricas inventadas). YA EXISTIAN y sin cambios: configs/data/source.yaml, configs/data/lsc70w.yaml, deployment/requirements-data.in, docs/data/README.md. Verificacion: 'configs ok' (3 YAML cargan, use_presence is False); python -m pytest tests/data tests/features tests/contracts -q => 77 passed, 1 skipped (skip por entorno Python 3.13 != 3.11 anclado; no rompe verde; mediapipe 0.10.21 no existe para 3.13 y cv2/mediapipe no se ejercitan). HALLAZGO .gitignore (RESUELTO por el usuario): el patron 'data/' sin anclar ignoraba configs/data, reports/data, docs/data, tests/data; el usuario (dueno de propiedad) anclo 'data/'->'/data/'; git check-ignore --no-index confirma entregables versionables y data/raw|interim|processed y artifacts/data siguen ignorados; §21 queda corregido como decision del usuario, Ortiz no reclama propiedad de .gitignore. BLOQUES ABIERTOS (no completados, dependen de corpus/.task/artefactos externos): DO02, DO05, DO07, DO08, DO09, DO10, DO11 (desbloqueo exacto en docs/data/blocks.md)."
+}

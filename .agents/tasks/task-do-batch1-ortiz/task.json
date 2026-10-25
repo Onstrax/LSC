@@ -1,0 +1,7 @@
+{
+  "task_id": "task-do-batch1-ortiz",
+  "task_description": "Implementar el lote 1 del modulo de datos y extraccion de caracteristicas de Ortiz (30% del proyecto LSC) exactamente segun el diseno aprobado en .agents/tasks/design.md: contratos, src/lsc_data, src/lsc_features, configs/data, suite de pruebas D01..D12 y F01..F12 + contratos, deployment/requirements-data.in y documentacion. Sin red, sin corpus real, sin .task reales (detector inyectable y fixtures sinteticos).",
+  "status": "completed",
+  "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003", "FEAT-004", "FEAT-005"],
+  "blocked_reason": null
+}

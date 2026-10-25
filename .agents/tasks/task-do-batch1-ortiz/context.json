@@ -1,0 +1,24 @@
+{
+  "project_type": "Proyecto LSC (reconocimiento de Lengua de Senas Colombiana). Monorepo multi-owner Python. Este lote es el modulo de Ortiz (datos + extraccion de caracteristicas, 30%).",
+  "language": "Python",
+  "build_system": "Sin pyproject.toml raiz (es de Acosta, NO existe). Existe pyproject.app.toml (de Juan, NO tocar). Ortiz entrega deployment/requirements-data.in como solicitud a Acosta. No hay build compilado; es Python puro.",
+  "test_framework": "pytest (instalado: pytest 9.1.1). El pytest.ini raiz (de Juan) fija testpaths=tests/app,tests/e2e; NO se edita. La suite de Ortiz se recolecta pasando paths explicitos.",
+  "build_command": "python -c \"import contracts, src.lsc_data, src.lsc_features; print('import ok')\" (no hay compilacion; el import valida que los paquetes cargan)",
+  "test_command": "python -m pytest tests/data tests/features tests/contracts",
+  "verification_instructions": "1) git -C c:\\Users\\danie\\Documents2\\LSC checkout ortiz/do01-nucleo-datos-features && git status. 2) pip install -r deployment/requirements-data.in (instala PyYAML, opencv-python-headless, mediapipe que FALTAN; numpy/pydantic/jsonschema/pytest ya estan). 3) Ejecutar el comando canonico de pruebas con paths explicitos. La suite verde NO debe importar cv2/mediapipe en recoleccion (el extractor no carga detectores en import, design §8.2/§16).",
+  "snapshot_or_generated_files": "contracts/feature_spec.json contiene feature_spec_hash que se calcula con contracts/canonical.py (§6.1). contracts/fixtures/SYNTHETIC_feature_result_6x147.npz se genera con numpy (sin pickle). Documentar en contracts/fixtures/README.md el snippet que regenera el .npz. Las salidas de CLI (data/, artifacts/, reports/data/*.csv) estan git-ignoradas.",
+  "environment_constraints": "Python real = 3.13.2 (el diseno ancla 3.11). FALTAN PyYAML, opencv-python-headless, mediapipe. Instalados: numpy 2.2.3, pydantic 2.12.5, jsonschema 4.23.0, pytest 9.1.1. Se trabaja DIRECTO en el workspace sobre la rama ortiz/do01-nucleo-datos-features (SIN worktree). NO modificar api/, app/, pytest.ini, pyproject.app.toml, resto de deployment/, tests/app, tests/e2e, docs/app. test_requirements_version.py debe tolerar Python != 3.11 (skip/warning) para no fabricar un rojo ajeno al codigo de Ortiz.",
+  "contribution_requirements": "AGENTS.md: Ortiz SOLO crea/edita contracts/, src/lsc_data/, src/lsc_features/, configs/data/, tests/data/, tests/features/, tests/contracts/, reports/data/, docs/data/, docs/article/data.md, deployment/requirements-data.in. Orden canonico de etiquetas fijo: 0 Hola,1 Buenos,2 Dias,3 Tardes,4 Noches,5 Yo,6 Nombre,7 Anos,8 Gustar,9 Licor. Sin fallback silencioso. Commits atomicos por DO, NO push.",
+  "key_patterns": "FeatureResult debe ser estructuralmente identico a api/adapters/types.py (dataclass frozen: x, quality_pass, reason_codes, valid_shoulders, frames_with_hand, feature_spec_hash, elapsed_ms) salvo valid_shoulders:int en Ortiz (API lo coacciona a bool). Firma EXACTA FeatureExtractor(config: Mapping, model_paths: Mapping[str,str|Path], detector=None) verificada en api/adapters/real.py. model_paths claves EXACTAS {'pose','hands'}. QUALITY_REASON_CODES frozenset de 9 codigos en api/constants.py es la fuente de referencia (solo lectura). SEQUENCE_SHAPE=(6,147), NUM_CLASSES=10. Hashing canonico: json.dumps(ensure_ascii=False, sort_keys=True, separators=(',',':'), allow_nan=False).",
+  "relevant_files": [
+    ".agents/tasks/design.md (DISENO APROBADO, fuente de verdad; leer §3 arbol, §4-§23 logica)",
+    ".agents/tasks/do-batch1-plan.md (plan ordenado por DO)",
+    "AGENTS.md (reglas de propiedad)",
+    "api/constants.py (SOLO LECTURA: QUALITY_REASON_CODES, SEQUENCE_SHAPE, NUM_CLASSES, FEATURE_DIM)",
+    "api/adapters/types.py (SOLO LECTURA: FeatureResult dataclass, ExtractorProtocol)",
+    "api/adapters/real.py (SOLO LECTURA: construye FeatureExtractor(feature_config, model_paths) con model_paths={'pose','hands'})",
+    ".gitignore (data/ y artifacts/* ya ignorados; NO anadir patrones)",
+    "pytest.ini (de Juan, NO editar; testpaths=tests/app,tests/e2e)"
+  ],
+  "directory_structure": "Raiz: api/ app/ deployment/ docs/ reports/ tests/ (de Juan/Acosta). A crear por Ortiz: contracts/ (tipos, hashing, schemas, fixtures), src/lsc_data/ (adquisicion, manifiesto, splits, packaging, CLI), src/lsc_features/ (extractor inyectable, geometria, asociacion, calidad, temporal, augment), configs/data/, tests/data|features|contracts/, reports/data/, docs/data/, docs/article/data.md, deployment/requirements-data.in. src/ NO existe aun."
+}
