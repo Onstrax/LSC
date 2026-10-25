@@ -1,0 +1,35 @@
+{
+  "id": "FEAT-004",
+  "type": "test",
+  "description": "DO01 suite de pruebas rapida sin red: tests/data (D01..D12), tests/features (F01..F12 incl. F08a-d y F09a-c) y tests/contracts (hash canonico, paridad pydantic<->JSON Schema, orden de etiquetas, reason_codes==frozenset de la API, config incompatible, model_paths, requirements/version). Las de fallo deliberado deben FALLAR si el defecto no se detecta. Depende de FEAT-001..003.",
+  "status": "completed",
+  "steps": [
+    "Crear tests/data/__init__.py y tests/data/conftest.py con fixtures de manifiesto/registros sinteticos reutilizando contracts/fixtures y contracts.models.",
+    "Crear tests/data/test_manifest_D.py (design §20) con D01 reconstruccion valida (sample_id y sequence_sha256 estables), D02 faltan frames -> excluido, D03 duplicado ambiguo -> exclusion, D04 personas/clases mezcladas -> exclusion, D05 signo estatico identico -> valido, D06 sequence_sha256 igual entre signer_id distintos -> incidente de copia cruzada (FALLO DELIBERADO: debe fallar si no se detecta), D07 class_id fuera de 0..9 rechazado y negativos a y=-1, D11 determinismo from-scratch.",
+    "Crear tests/data/test_split_leakage.py con D08 split 70 personas -> 49/7/14 exactos con seed=20261022, D09 fuga de identidad mismo signer_id en train y test -> integridad exit 3 (FALLO DELIBERADO), D10 falta una clase en val -> incidente con conteos sin recomputar semilla.",
+    "Crear tests/data/test_acquisition_security.py con D12: archivo con ../symlink/absoluta/ejecutable -> rechazo, nada se mueve a destino, exit 3; source.yaml mal formado -> exit 2; sin estado parcial.",
+    "Crear tests/data/test_cli_exit_codes.py verificando el mapeo uniforme 0/2/3 de los subcomandos (acquire/validate al menos).",
+    "Crear tests/features/__init__.py y tests/features/conftest.py con fixtures de FakeDetector y constructores de geometria sintetica (poses y manos programadas en memoria).",
+    "Crear tests/features/test_features_F.py (design §20): F01 una persona + ambas manos -> x (6,147) quality_pass=True; F02 forma/dtype float32 (6,147) y orden (x,y,m); F03 normalizacion centro/escala medianos comunes; F04 ausencia m=0 -> x=y=0 y cero real con m=1 conservado; F05 GEOMETRY_OUTLIER |v|>10; F06 MULTIPLE_PEOPLE dos poses; F07 hombros insuficientes <5 -> INSUFFICIENT_POSE quality_pass=False (use_presence=false por defecto); F08a 0 manos; F08b 1 mano costo<=0.6 asigna / >0.6 ausente; F08c <4 cuadros con mano -> INSUFFICIENT_HANDS; F08d cuadro sin hombros validos con 2 munecas -> no asocia, no suma a frames_with_hand, no emite ambiguedad (FALLO DELIBERADO); F09a gap>=0.05 menor costo; F09b gap<0.05 -> HAND_ASSOCIATION_AMBIGUOUS ambas ausentes; F09c una sola asignacion completa; F10 augment train_v1 preserva forma/mascaras/ceros y val/test sin augment (FALLO DELIBERADO si toca m=0); F11 sample_indices tabla §15 (FALLO DELIBERADO si usa round() nativo o altera orden); F12 orden temporal corrupto cambia el resultado (FALLO DELIBERADO si es invariante al orden).",
+    "Crear tests/contracts/__init__.py y test_feature_spec_hash.py (hash estable ante rename de campo cosmetico/cambio de build_date, cambia ante point_order).",
+    "Crear tests/contracts/test_schema_pydantic_parity.py: instancias validas e invalidas desde pydantic validadas contra los JSON Schema con jsonschema; pydantic y jsonschema aceptan/rechazan el MISMO conjunto.",
+    "Crear tests/contracts/test_labels_canonical_order.py (orden canonico fijo, no inferido de listdir ni alfabetico) y test_incompatible_config.py (labels.json o feature_spec_hash divergente -> consumidor falla al INICIO; .task faltante -> mensaje accionable sin descarga silenciosa).",
+    "Crear tests/contracts/test_model_paths_contract.py: claves EXACTAS {'pose','hands'}; config acepta dict de feature_spec; init() con clave faltante o sobrante -> CONFIG_MISMATCH sin tocar disco con FakeDetector.",
+    "Crear tests/contracts/test_requirements_version.py: (a) deployment/requirements-data.in existe, es parseable y ancla versiones; (b) pydantic es v2 (pydantic.VERSION empieza por '2.'); verificacion de Python 3.11 con pytest.mark.skip o warning si el entorno es 3.13 (sin romper el verde); (c) tests/data, tests/features y tests/contracts existen y son recolectables via paths explicitos SIN leer pytest.ini. NO compara con reason_codes aqui: ese set se compara en un test dedicado.",
+    "Anadir (en tests/contracts) la comparacion de conjuntos: el frozenset de reason_codes de src.lsc_features.reason_codes == api.constants.QUALITY_REASON_CODES (comparacion de set, orden irrelevante)."
+  ],
+  "acceptance_criteria": [
+    "python -m pytest tests/data tests/features tests/contracts termina con exit 0 (toda la suite verde).",
+    "Las pruebas de fallo deliberado (D06, D09, F08d, F10, F11, F12) pasan porque el defecto SI se detecta (si se neutraliza la deteccion, deben ponerse rojas).",
+    "El conjunto de reason_codes de Ortiz es identico (==) al frozenset de api/constants.py.",
+    "test_model_paths_contract.py confirma claves {'pose','hands'} y CONFIG_MISMATCH sin tocar disco.",
+    "La suite no importa cv2 ni mediapipe durante la recoleccion."
+  ],
+  "verification": [
+    "python -m pytest tests/data tests/features tests/contracts",
+    "python -m pytest tests/contracts -q",
+    "python -c \"from src.lsc_features.reason_codes import QUALITY_REASON_CODES as a; from api.constants import QUALITY_REASON_CODES as b; assert set(a)==set(b); print('reason_codes ok')\""
+  ],
+  "blocked_reason": null,
+  "findings": "Suite completa VERDE con el comando canonico 'python -m pytest tests/data tests/features tests/contracts': 77 passed, 1 skipped (test_python_3_11_expected se salta porque el entorno es Python 3.13.2; el diseno §22 ancla 3.11 y pide skip/warning para no fabricar un rojo ajeno al codigo de Ortiz). 78 items recolectados. Conteo por suite: tests/data=26 (D01..D12 + CLI exit codes + seguridad), tests/features=20 (F01..F12 incl. F08a-d y F09a-c + temporal + augment), tests/contracts=32 (31 pass + 1 skip; hash, paridad pydantic<->jsonschema, orden de etiquetas, reason_codes==API, config incompatible, model_paths, requirements/version). Las de fallo deliberado (D06, D09, F08d, F10, F11, F12) pasan porque el defecto SI se detecta; verificado que neutralizar la deteccion de D06 (_detect_cross_sequence_copies) pone la prueba en rojo. La recoleccion NO importa cv2 ni mediapipe (verificado sys.modules tras --collect-only). Ningun bug encontrado en FEAT-001..003: no se modifico codigo de Ortiz en src/ ni contracts/. Archivo nuevo creado dentro de las rutas de Ortiz: deployment/requirements-data.in (unico .in permitido bajo deployment/ por AGENTS.md/design §22), con numpy, opencv-python-headless, mediapipe, pydantic, jsonschema, PyYAML y pytest anclados. Notas de paridad: el schema de SplitDoc fija 'seed' const 20261022 que pydantic no restringe, asi que el caso invalido de paridad usa una clave extra (rechazada por ambos) en vez de un seed divergente. Entorno: pydantic 2.12.5, jsonschema 4.23.0, numpy 2.2.3, PyYAML 6.0.3, pytest 9.1.1."
+}

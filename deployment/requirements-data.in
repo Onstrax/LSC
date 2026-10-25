@@ -1,0 +1,18 @@
+# Dependencias del módulo de datos y extracción de Ortiz (design §2, §22).
+#
+# Archivo ÚNICO nuevo permitido bajo deployment/ para Ortiz (AGENTS.md). Se
+# entrega como SOLICITUD a Acosta para que lo fusione al lockfile raíz (que hoy
+# NO existe en el repo). Ortiz NO toca pyproject.toml, pyproject.app.toml,
+# requirements-app.in ni la CI raíz.
+#
+# Versiones ANCLADAS (design §22): numpy, opencv-python-headless y mediapipe
+# (Tasks) para el camino real; pydantic v2, jsonschema, PyYAML y pytest para
+# contratos y suite rápida sin red.
+
+numpy==2.2.3
+opencv-python-headless==4.10.0.84
+mediapipe==0.10.21
+pydantic==2.12.5
+jsonschema==4.23.0
+PyYAML==6.0.2
+pytest==9.1.1
