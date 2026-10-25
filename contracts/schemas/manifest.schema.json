@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lsc.local/contracts/manifest.schema.json",
+  "title": "ManifestRecord",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "sample_id",
+    "source",
+    "source_version",
+    "signer_id",
+    "class_id",
+    "raw_label",
+    "repetition_id",
+    "frame_paths",
+    "frame_sha256",
+    "frame_indices",
+    "width",
+    "height",
+    "n_frames",
+    "sequence_sha256",
+    "structural_status"
+  ],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "sample_id": { "type": "string" },
+    "source": { "type": "string" },
+    "source_version": { "type": "string" },
+    "signer_id": { "type": "string" },
+    "class_id": {
+      "type": ["integer", "null"],
+      "minimum": 0,
+      "maximum": 9
+    },
+    "raw_label": { "type": "string" },
+    "repetition_id": { "type": "integer" },
+    "frame_paths": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": { "type": "string" }
+    },
+    "frame_sha256": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": { "type": "string" }
+    },
+    "frame_indices": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "uniqueItems": true,
+      "items": { "type": "integer" }
+    },
+    "width": { "type": "integer" },
+    "height": { "type": "integer" },
+    "n_frames": { "const": 6 },
+    "sequence_sha256": { "type": "string" },
+    "structural_status": { "type": "string" },
+    "domain": { "type": ["string", "null"] },
+    "participant_group": { "type": ["string", "null"] },
+    "experience_lsc": {
+      "type": ["string", "null"],
+      "enum": ["fluent", "interpreter", "instructed", "unknown", null]
+    },
+    "capture_session": { "type": ["string", "null"] },
+    "capture_protocol_version": { "type": ["string", "null"] },
+    "consent_ref": { "type": ["string", "null"] },
+    "timestamps_ms": {
+      "type": ["array", "null"],
+      "items": { "type": "integer" }
+    },
+    "sample_type": {
+      "type": ["string", "null"],
+      "enum": ["known", "rest", "gesture", "out_of_vocab", null]
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "schema_version": "lsc.splits.v1",
+  "seed": 20261022,
+  "manifest_sha256": "5107f576d09ac7d5224754271327dd10cc14925a50cc49d808f448cf6df72fa0",
+  "version": "splits_v1",
+  "signer_ids": {
+    "train": [
+      "S000"
+    ],
+    "val": [],
+    "test": []
+  },
+  "sample_ids": {
+    "train": [
+      "929a4927436de2d1c5e20159cdbd9358336021e8606c7911a67946a3c4e08985"
+    ],
+    "val": [],
+    "test": []
+  },
+  "class_coverage": {
+    "train": {
+      "0": 1
+    },
+    "val": {},
+    "test": {}
+  },
+  "incidents": []
+}

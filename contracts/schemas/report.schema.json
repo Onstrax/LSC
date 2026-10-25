@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lsc.local/contracts/report.schema.json",
+  "title": "Report",
+  "type": "object",
+  "oneOf": [
+    {
+      "title": "ManifestReport",
+      "additionalProperties": false,
+      "required": [
+        "report_type",
+        "n_records",
+        "n_valid",
+        "n_excluded",
+        "by_class",
+        "by_signer",
+        "exclusions_path",
+        "manifest_path",
+        "warnings"
+      ],
+      "properties": {
+        "report_type": { "const": "manifest" },
+        "n_records": { "type": "integer" },
+        "n_valid": { "type": "integer" },
+        "n_excluded": { "type": "integer" },
+        "by_class": { "type": "object" },
+        "by_signer": { "type": "object" },
+        "exclusions_path": { "type": "string" },
+        "manifest_path": { "type": "string" },
+        "warnings": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    {
+      "title": "SplitReport",
+      "additionalProperties": false,
+      "required": [
+        "report_type",
+        "n_train",
+        "n_val",
+        "n_test",
+        "n_signers",
+        "class_coverage",
+        "incidents",
+        "splits_path"
+      ],
+      "properties": {
+        "report_type": { "const": "split" },
+        "n_train": { "type": "integer" },
+        "n_val": { "type": "integer" },
+        "n_test": { "type": "integer" },
+        "n_signers": { "type": "integer" },
+        "class_coverage": { "type": "object" },
+        "incidents": { "type": "array", "items": { "type": "string" } },
+        "splits_path": { "type": "string" }
+      }
+    },
+    {
+      "title": "FeatureBuildReport",
+      "additionalProperties": false,
+      "required": [
+        "report_type",
+        "n_total",
+        "n_quality_pass",
+        "n_failed",
+        "failed_sample_ids",
+        "feature_spec_hash",
+        "bundle_path",
+        "per_reason_counts"
+      ],
+      "properties": {
+        "report_type": { "const": "feature_build" },
+        "n_total": { "type": "integer" },
+        "n_quality_pass": { "type": "integer" },
+        "n_failed": { "type": "integer" },
+        "failed_sample_ids": { "type": "array", "items": { "type": "string" } },
+        "feature_spec_hash": { "type": "string" },
+        "bundle_path": { "type": "string" },
+        "per_reason_counts": { "type": "object" }
+      }
+    }
+  ]
+}

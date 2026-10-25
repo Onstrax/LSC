@@ -1,0 +1,15 @@
+{
+  "schema_version": "lsc.labels.v1",
+  "labels": [
+    { "class_id": 0, "code": "hola",    "display_text": "Hola",    "raw_label": "Hola" },
+    { "class_id": 1, "code": "buenos",  "display_text": "Buenos",  "raw_label": "Buenos" },
+    { "class_id": 2, "code": "dias",    "display_text": "Días",    "raw_label": "Días" },
+    { "class_id": 3, "code": "tardes",  "display_text": "Tardes",  "raw_label": "Tardes" },
+    { "class_id": 4, "code": "noches",  "display_text": "Noches",  "raw_label": "Noches" },
+    { "class_id": 5, "code": "yo",      "display_text": "Yo",      "raw_label": "Yo" },
+    { "class_id": 6, "code": "nombre",  "display_text": "Nombre",  "raw_label": "Nombre" },
+    { "class_id": 7, "code": "anos",    "display_text": "Años",    "raw_label": "Años" },
+    { "class_id": 8, "code": "gustar",  "display_text": "Gustar",  "raw_label": "Gustar" },
+    { "class_id": 9, "code": "licor",   "display_text": "Licor",   "raw_label": "Licor" }
+  ]
+}

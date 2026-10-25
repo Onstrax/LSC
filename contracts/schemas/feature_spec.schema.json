@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lsc.local/contracts/feature_spec.schema.json",
+  "title": "FeatureSpec",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "feature_version",
+    "point_order",
+    "coordinate_system",
+    "temporal_length",
+    "features_per_frame",
+    "dtype",
+    "missing_policy",
+    "quality_rules",
+    "detector_versions",
+    "model_asset_hashes",
+    "normalization"
+  ],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "feature_version": { "type": "string" },
+    "point_order": {
+      "type": "array",
+      "minItems": 49,
+      "maxItems": 49,
+      "items": { "type": "string" }
+    },
+    "coordinate_system": { "type": "string" },
+    "temporal_length": { "const": 6 },
+    "features_per_frame": { "const": 147 },
+    "dtype": { "const": "float32" },
+    "missing_policy": { "type": "object" },
+    "quality_rules": { "type": "object" },
+    "detector_versions": { "type": "object" },
+    "model_asset_hashes": { "type": "object" },
+    "normalization": { "type": "object" },
+    "build_date": { "type": ["string", "null"] },
+    "feature_spec_hash": { "type": ["string", "null"] }
+  }
+}

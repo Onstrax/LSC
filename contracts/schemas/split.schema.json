@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lsc.local/contracts/split.schema.json",
+  "title": "SplitDoc",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "seed",
+    "manifest_sha256",
+    "version",
+    "signer_ids",
+    "sample_ids",
+    "class_coverage",
+    "incidents"
+  ],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "seed": { "const": 20261022 },
+    "manifest_sha256": { "type": "string" },
+    "version": { "type": "string" },
+    "signer_ids": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["train", "val", "test"],
+      "properties": {
+        "train": { "type": "array", "items": { "type": "string" } },
+        "val": { "type": "array", "items": { "type": "string" } },
+        "test": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "sample_ids": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["train", "val", "test"],
+      "properties": {
+        "train": { "type": "array", "items": { "type": "string" } },
+        "val": { "type": "array", "items": { "type": "string" } },
+        "test": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "class_coverage": { "type": "object" },
+    "incidents": { "type": "array", "items": { "type": "string" } }
+  }
+}
