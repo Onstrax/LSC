@@ -1,0 +1,28 @@
+{
+  "id": "FEAT-002",
+  "type": "feat",
+  "description": "DO05: activar el camino REAL de MediaPipe. Completar RealDetector.detect_pose/detect_hands en src/lsc_features/detector.py (hoy lanzan NotImplementedError) para mapear los resultados de MediaPipe Tasks a los dataclasses PoseResult/HandsResult de Ortiz, y registrar la procedencia de los .task (SHA-256 reales) en contracts/feature_spec.json y configs/data/features_v1.yaml, recomputando el feature_spec_hash canonico. No se toca el nucleo matematico (geometry/association/quality) ni la API. Independiente de FEAT-001 en codigo, pero se ordena despues porque FEAT-003 necesita ambos.",
+  "status": "completed",
+  "steps": [
+    "En src/lsc_features/detector.py, implementar RealDetector.detect_pose: construir la imagen mediapipe con 'import mediapipe as mp' perezoso -> mp.Image(image_format=mp.ImageFormat.SRGB, data=image_rgb), llamar self._pose.detect(mp_image), y traducir result.pose_landmarks (list[list[NormalizedLandmark]]) a PoseResult(pose_landmarks=[[PoseLandmark(x=lm.x, y=lm.y, visibility=getattr(lm,'visibility',1.0), presence=getattr(lm,'presence',None)) for lm in persona] for persona in result.pose_landmarks]). Si result.pose_landmarks es None, devolver PoseResult().",
+    "Implementar RealDetector.detect_hands: igual con self._hands.detect(mp_image) -> HandsResult(hand_landmarks=[[HandLandmark(x=lm.x, y=lm.y) for lm in mano] for mano in result.hand_landmarks], handedness=[...]). Si es None, HandsResult(). El handedness se transporta pero no interviene en la asociacion (design §11).",
+    "Mantener los imports de mediapipe PEREZOSOS (nunca en el import del modulo): el __init__ de RealDetector ya los hace; anadir el import de mp dentro de detect_pose/detect_hands o reutilizar un helper que convierta rgb->mp.Image. No alterar las opciones ya fijadas (RunningMode.IMAGE, num_poses=2, num_hands=2, thresholds 0.5).",
+    "Registrar procedencia de los .task en contracts/feature_spec.json: poner model_asset_hashes.pose = '4eaa5eb7a98365221087693fcc286334cf0858e2eb6e15b506aa4a7ecdcec4ad' y model_asset_hashes.hands = 'fbc2a30080c3c557093b5ddfc334698132eb341044cceee322ccf8bcf3607cde1' (SHA-256 reales, minusculas); detector_versions.pose/hands = string de procedencia (p. ej. 'mediapipe-tasks:'+mediapipe.__version__+':pose_landmarker.task' y '...:hand_landmarker.task'). Recomputar el campo feature_spec_hash del JSON con contracts.canonical.feature_spec_hash(spec_sin_hash).",
+    "Reflejar los mismos detector_versions y model_asset_hashes en configs/data/features_v1.yaml (bloques detector_versions y model_asset_hashes), para que la config y el contrato no diverjan.",
+    "Confirmar que tests/contracts/test_feature_spec_hash.py sigue verde (verifica estabilidad ante rename/fecha y cambio ante point_order; no fija un valor literal del hash)."
+  ],
+  "acceptance_criteria": [
+    "RealDetector('artifacts/models/pose_landmarker.task','artifacts/models/hand_landmarker.task') se instancia y detect_pose/detect_hands sobre una imagen real del corpus devuelven PoseResult/HandsResult sin NotImplementedError.",
+    "contracts/feature_spec.json tiene model_asset_hashes con los SHA-256 reales y detector_versions no nulos, y feature_spec_hash(spec) == spec['feature_spec_hash'].",
+    "configs/data/features_v1.yaml refleja los mismos detector_versions/model_asset_hashes.",
+    "La suite canonica sigue verde, en particular tests/contracts/test_feature_spec_hash.py."
+  ],
+  "verification": [
+    "python -c \"from src.lsc_features.detector import RealDetector; import cv2; d=RealDetector('artifacts/models/pose_landmarker.task','artifacts/models/hand_landmarker.task'); img=cv2.cvtColor(cv2.imread('Speak in Colombian Sign Language A Dynamic LSC70 Database/LSC70/LSC70/LSC70W/Per01/HOLA/Per01_HOLA_0.jpg'),cv2.COLOR_BGR2RGB); pr=d.detect_pose(img); hr=d.detect_hands(img); print('poses',len(pr.pose_landmarks),'hands',len(hr.hand_landmarks)); d.close()\"",
+    "python -c \"import json; from contracts.canonical import feature_spec_hash; s=json.load(open('contracts/feature_spec.json',encoding='utf-8')); print('hash_ok', feature_spec_hash(s)==s['feature_spec_hash']); print('pose_hash', s['model_asset_hashes']['pose'])\"",
+    "python -m pytest tests/contracts/test_feature_spec_hash.py tests/contracts -q",
+    "python -m pytest tests/data tests/features tests/contracts -q"
+  ],
+  "blocked_reason": null,
+  "findings": "DO05 completado. RealDetector.detect_pose/detect_hands implementados en src/lsc_features/detector.py envolviendo mediapipe.tasks vision PoseLandmarker/HandLandmarker (modo IMAGE, num_poses=2/num_hands=2/thresholds 0.5 sin cambios); imports de mediapipe perezosos (helper _to_mp_image + __init__), el import del paquete NO carga mediapipe (verificado: mediapipe_loaded False). Verificacion canonica sobre Per01/HOLA/Per01_HOLA_0.jpg: poses 1, hands 1, sin NotImplementedError. Procedencia registrada (mediapipe 1.2.2): detector_versions.pose='mediapipe-tasks:1.2.2:pose_landmarker.task', detector_versions.hands='mediapipe-tasks:1.2.2:hand_landmarker.task'; model_asset_hashes.pose='4eaa5eb7a98365221087693fcc286334cf0858e2eb6e15b506aa4a7ecdcec4ad', model_asset_hashes.hands='fbc2a30080c3c557093b5ddfc334698132eb341044cceee322ccf8bcf3607cde1' (SHA-256 reales confirmados con Get-FileHash). feature_spec_hash recomputado: abecec4...->08779533e99cc466db5845498789e13b11bcab02144d41135915a1e24961c004 (feature_spec_hash(spec)==stored True). Mismos valores reflejados en configs/data/features_v1.yaml. Suite: python -m pytest tests/data tests/features tests/contracts -q => 77 passed, 1 skipped (test_requirements_version skip por Python 3.13 vs 3.11, por diseno). tests/contracts/test_feature_spec_hash.py verde."
+}

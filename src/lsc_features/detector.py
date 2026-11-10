@@ -2,9 +2,9 @@
 
 El paquete NO importa ``cv2`` ni ``mediapipe`` en el import. El extractor acepta
 un detector que espeja la API IMAGE de MediaPipe Tasks. Para pruebas se usa
-``FakeDetector`` (landmarks programados en memoria). ``RealDetector`` queda
-DOCUMENTADO pero NO ejercitado en este lote (bloque DO05): sus imports de
-MediaPipe son perezosos (dentro de ``__init__``), nunca en el import del módulo.
+``FakeDetector`` (landmarks programados en memoria). ``RealDetector`` envuelve
+MediaPipe Tasks (modo IMAGE); sus imports de MediaPipe son perezosos (dentro de
+``__init__`` y de los ``detect_*``), nunca en el import del módulo.
 """
 
 from __future__ import annotations
@@ -139,22 +139,20 @@ class FakeDetector:
 
 
 # ---------------------------------------------------------------------------
-# RealDetector — DOCUMENTADO, NO ejercitado en este lote (bloque DO05)
+# RealDetector — envoltura real de MediaPipe Tasks (modo IMAGE)
 # ---------------------------------------------------------------------------
 class RealDetector:
-    """Envoltura de MediaPipe Tasks (modo IMAGE) — bloque DO05, NO ejercitado.
+    """Envoltura de MediaPipe Tasks (modo IMAGE).
 
     Carga los ``.task`` reales de ``pose_landmarker.task`` y
     ``hand_landmarker.task`` con ``running_mode=IMAGE``, ``num_poses=2``,
     ``num_hands=2`` y thresholds 0.5. Los imports de ``mediapipe`` son PEREZOSOS
-    (dentro de ``__init__``), nunca en el import del módulo (design §8.2/§16).
-
-    Este lote no ejercita este camino; la carga de ``.task`` se desbloquea en
-    DO05. Se incluye para documentar la interfaz esperada; instanciarlo requiere
-    ``mediapipe`` instalado y artefactos reales.
+    (dentro de ``__init__`` y de los ``detect_*``), nunca en el import del
+    módulo (design §8.2/§16). Instanciarlo requiere ``mediapipe`` instalado y
+    los artefactos reales.
     """
 
-    def __init__(self, pose_task_path, hands_task_path) -> None:  # pragma: no cover - DO05
+    def __init__(self, pose_task_path, hands_task_path) -> None:  # pragma: no cover - requiere mediapipe + artefactos
         # Import perezoso: nunca ocurre en el import del paquete.
         from mediapipe.tasks import python as mp_python  # type: ignore
         from mediapipe.tasks.python import vision as mp_vision  # type: ignore
@@ -176,12 +174,50 @@ class RealDetector:
         self._pose = mp_vision.PoseLandmarker.create_from_options(pose_opts)
         self._hands = mp_vision.HandLandmarker.create_from_options(hands_opts)
 
-    def detect_pose(self, image_rgb: np.ndarray) -> PoseResult:  # pragma: no cover - DO05
-        raise NotImplementedError("RealDetector es un bloque DO05 no ejercitado en este lote.")
+    @staticmethod
+    def _to_mp_image(image_rgb: np.ndarray):  # pragma: no cover - requiere mediapipe
+        """Envuelve un arreglo RGB uint8 en un ``mp.Image`` (import perezoso)."""
+        import mediapipe as mp  # type: ignore
 
-    def detect_hands(self, image_rgb: np.ndarray) -> HandsResult:  # pragma: no cover - DO05
-        raise NotImplementedError("RealDetector es un bloque DO05 no ejercitado en este lote.")
+        return mp.Image(image_format=mp.ImageFormat.SRGB, data=image_rgb)
 
-    def close(self) -> None:  # pragma: no cover - DO05
+    def detect_pose(self, image_rgb: np.ndarray) -> PoseResult:  # pragma: no cover - requiere mediapipe + artefactos
+        mp_image = self._to_mp_image(image_rgb)
+        result = self._pose.detect(mp_image)
+        if result.pose_landmarks is None:
+            return PoseResult()
+        return PoseResult(
+            pose_landmarks=[
+                [
+                    PoseLandmark(
+                        x=lm.x,
+                        y=lm.y,
+                        visibility=getattr(lm, "visibility", 1.0),
+                        presence=getattr(lm, "presence", None),
+                    )
+                    for lm in persona
+                ]
+                for persona in result.pose_landmarks
+            ]
+        )
+
+    def detect_hands(self, image_rgb: np.ndarray) -> HandsResult:  # pragma: no cover - requiere mediapipe + artefactos
+        mp_image = self._to_mp_image(image_rgb)
+        result = self._hands.detect(mp_image)
+        if result.hand_landmarks is None:
+            return HandsResult()
+        handedness: list[str] = []
+        for mano in getattr(result, "handedness", None) or []:
+            if mano:
+                handedness.append(mano[0].category_name)
+        return HandsResult(
+            hand_landmarks=[
+                [HandLandmark(x=lm.x, y=lm.y) for lm in mano]
+                for mano in result.hand_landmarks
+            ],
+            handedness=handedness,
+        )
+
+    def close(self) -> None:  # pragma: no cover - requiere mediapipe + artefactos
         self._pose.close()
         self._hands.close()
