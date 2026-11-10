@@ -18,6 +18,8 @@ pilot/
 consents/
 *.mp4
 *.mov
+# Corpus LSC70 extraido (imagenes de firmantes reales; NUNCA en Git)
+Speak in Colombian Sign Language A Dynamic LSC70 Database/
 
 # Evidencias con posibles identidades (se conservan fuera del repo)
 reports/app/*_private*

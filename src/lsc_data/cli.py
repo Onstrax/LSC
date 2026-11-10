@@ -66,6 +66,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_features.add_argument("--config", required=True)
     p_features.add_argument("--manifest", required=True)
     p_features.add_argument("--splits", required=True)
+    p_features.add_argument("--raw-dir", default=None)
     p_features.add_argument("--out", required=True)
     p_features.add_argument("--resume", action="store_true")
 
@@ -124,10 +125,10 @@ def _handle_split(args: argparse.Namespace) -> int:
 
 
 def _handle_features(args: argparse.Namespace) -> int:
-    # DO07: la construcción real sobre corpus requiere el extractor (FEAT-003) y
-    # datos reales. Aquí se ejerce la semántica de --resume (§19): si el bundle
-    # existente es incompatible con la config/manifiesto actuales, se ABORTA con
-    # integridad (exit 3) sin sobrescribir.
+    # DO07: construcción REAL del bundle. --raw-dir resuelve frame_paths contra
+    # la raíz del corpus; el detector real usa los .task de artifacts/models.
+    # --resume (§19) aborta con integridad (exit 3) si el bundle existente es
+    # incompatible con la config/manifiesto actuales, sin sobrescribir.
     from .features_build import run_features
 
     return run_features(
@@ -136,6 +137,7 @@ def _handle_features(args: argparse.Namespace) -> int:
         splits_path=args.splits,
         out_dir=args.out,
         resume=args.resume,
+        raw_dir=args.raw_dir,
     )
 
 

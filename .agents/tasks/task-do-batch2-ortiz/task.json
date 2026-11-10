@@ -1,0 +1,7 @@
+{
+  "task_id": "task-do-batch2-ortiz",
+  "task_description": "Desbloquear y ejecutar el pipeline REAL del modulo de datos de Ortiz (DO02 adquisicion/procedencia, DO03 manifiesto/inventario, DO04 split seed 20261022, DO05-real+DO07 extraccion MediaPipe real y paquete v1, DO08 paridad con la API de Juan sin tocar app/ ni api/, DO10 articulo con conteos reales) usando el corpus y los .task ya en disco. No se reescribe el nucleo verde (contracts/, src/lsc_data, src/lsc_features, suite D01-D12/F01-F12). Solo se editan rutas de Ortiz.",
+  "status": "completed",
+  "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003", "FEAT-004"],
+  "blocked_reason": null
+}

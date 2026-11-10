@@ -35,12 +35,12 @@ augment:
     probability: 0.5
     std: 0.005              # unidades de hombro; sólo donde m=1
 
-# Versiones y hashes de los detectores MediaPipe Tasks. Vacíos/pendientes hasta
-# DO05 (procedencia verificable de los .task). Entran al feature_spec_hash, de
-# modo que registrarlos cambia el hash (design §19/§24 DO05).
+# Versiones y hashes de los detectores MediaPipe Tasks (procedencia verificable
+# de los .task, DO05). Entran al feature_spec_hash, de modo que registrarlos
+# cambia el hash (design §19/§24 DO05). Deben coincidir con contracts/feature_spec.json.
 detector_versions:
-  pose: null
-  hands: null
+  pose: mediapipe-tasks:1.2.2:pose_landmarker.task
+  hands: mediapipe-tasks:1.2.2:hand_landmarker.task
 model_asset_hashes:
-  pose: null
-  hands: null
+  pose: 4eaa5eb7a98365221087693fcc286334cf0858e2eb6e15b506aa4a7ecdcec4ad
+  hands: fbc2a30080c3c557093b5ddfc334698132eb341044cceee322ccf8bcf3607cde1
