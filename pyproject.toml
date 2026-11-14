@@ -1,0 +1,53 @@
+# pyproject raíz — propiedad de Acosta (AGENTS.md). Los demás piden cambios por issue.
+#
+# Versiones: las probadas en la compatibilidad inicial (ver docs/models/compat.md).
+# El lock reproducible se genera en Python 3.11 (objetivo del diseño) con:
+#   pip install pip-tools && pip-compile --extra train -o requirements-lock.txt pyproject.toml
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lsc"
+version = "0.1.0"
+description = "Reconocimiento de 10 señas aisladas de LSC (LSC70W): datos, modelos, API y app local"
+requires-python = ">=3.11,<3.13"
+dependencies = [
+  "numpy>=2.0,<3",
+  "pydantic>=2.7,<3",
+  "PyYAML>=6.0",
+  "jsonschema>=4.23",
+]
+
+[project.optional-dependencies]
+features = ["opencv-python-headless>=4.10", "mediapipe>=0.10.21"]
+train = [
+  "tensorflow-cpu>=2.17,<3",   # incluye Keras 3
+  "scikit-learn>=1.4",
+  "matplotlib>=3.8",
+]
+app = [
+  "fastapi>=0.111,<1.0",
+  "uvicorn[standard]>=0.30",
+  "python-multipart>=0.0.9",
+  "pillow>=10.3",
+]
+dev = ["pytest>=8.2", "httpx>=0.27"]
+e2e = ["playwright>=1.44", "pytest-playwright>=0.5"]
+
+[tool.setuptools]
+packages = []
+
+[tool.pytest.ini_options]
+# NOTA: mientras exista pytest.ini (Juan), pytest lo prefiere a esta sección.
+# Se solicita a Juan (issue) retirarlo para que rija esta configuración unificada.
+markers = [
+  "realmodel: requiere model.keras + .task reales (excluir en CI rápida)",
+  "e2e: pruebas de navegador con Playwright",
+  "slow: pruebas lentas (latencia, sesiones prolongadas)",
+]
+testpaths = [
+  "tests/contracts", "tests/data", "tests/features",
+  "tests/models", "tests/inference", "tests/app",
+]
+addopts = "-ra"
