@@ -1,0 +1,63 @@
+# Matriz de experimentos del plan (§2): BiLSTM y Transformer compacto, cada uno
+# con y sin aumento de datos, semillas 17/29/43  ->  4 x 3 = 12 ejecuciones.
+# Propietario: Acosta. Cualquier cambio aquí cambia el hash de configuración de
+# cada ejecución; después del 18 nov. (congelación) NO se edita.
+version: train_v1
+
+data:
+  bundle_dir: artifacts/data/v1          # entrega de Ortiz (features.npz); git-ignorado
+  features_file: features.npz
+
+seeds: [17, 29, 43]
+deployed_seed: 17                        # regla fijada ANTES del test (plan §6)
+
+# Presupuesto idéntico para ambas arquitecturas.
+training:
+  optimizer: adam
+  learning_rate: 0.001
+  batch_size: 32
+  max_epochs: 80
+  patience: 12                           # épocas sin mejorar F1 macro de validación
+  min_epochs: 5
+  monitor: val_macro_f1                  # desempate: menor pérdida de validación
+  restore_best: true
+
+augmentation:
+  policy: train_v1                       # src.lsc_features.augment (Ortiz); solo train
+
+latency:                                 # latencia del MODELO (no de extremo a extremo)
+  warmup: 20
+  repeats: 200
+
+models:
+  bilstm:
+    proj_dim: 64
+    units: 64
+    dropout: 0.3
+  transformer:
+    d_model: 64
+    num_heads: 4
+    num_blocks: 2
+    ff_dim: 128
+    dropout: 0.2
+
+configs:
+  bilstm_noaug:      {model: bilstm,      augment: false}
+  bilstm_aug:        {model: bilstm,      augment: true}
+  transformer_noaug: {model: transformer, augment: false}
+  transformer_aug:   {model: transformer, augment: true}
+
+selection:
+  metric: val_macro_f1_processable       # media sobre semillas
+  tie_tolerance: 0.01                    # diferencia <= 0.01 -> gana menor p95 de inferencia
+  tie_breaker: p95_latency_ms
+
+goals:                                   # metas, NO resultados (plan §2)
+  accuracy: 0.85
+  macro_f1: 0.80
+  p95_response_s: 2.0
+
+sensitivity:
+  hand_dropout_fractions: [0.0, 0.17, 0.33, 0.5, 0.67]
+  repetitions: 20
+  seed: 20261113
