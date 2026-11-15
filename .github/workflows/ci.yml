@@ -1,0 +1,24 @@
+# CI raíz — propiedad de Acosta. Suite rápida: sin Playwright, sin corpus, sin pesos reales.
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    env:
+      TF_CPP_MIN_LOG_LEVEL: "3"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Instalar
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[features,train,app,dev]"
+      - name: Suite rápida (datos, características, contratos, modelos, inferencia, API)
+        run: python -m pytest tests/contracts tests/data tests/features tests/models tests/inference tests/app -q
