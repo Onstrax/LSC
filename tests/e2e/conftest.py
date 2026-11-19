@@ -90,13 +90,18 @@ def server():
 def browser_context():
     """Chromium con cámara simulada y permisos concedidos."""
     with sync_playwright() as p:
-        browser = p.chromium.launch(
-            headless=True,
-            args=[
-                "--use-fake-ui-for-media-stream",
-                "--use-fake-device-for-media-stream",
-            ],
-        )
+        try:
+            browser = p.chromium.launch(
+                headless=True,
+                args=[
+                    "--use-fake-ui-for-media-stream",
+                    "--use-fake-device-for-media-stream",
+                ],
+            )
+        except Exception as exc:  # binario de Chromium ausente: omitir, no fallar la suite
+            if "Executable doesn't exist" in str(exc) or "playwright install" in str(exc):
+                pytest.skip("Chromium de Playwright no instalado: ejecute `python -m playwright install chromium`")
+            raise
         context = browser.new_context(permissions=["camera"])
         yield context
         context.close()

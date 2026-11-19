@@ -1,4 +1,4 @@
-"""Inferencia del proyecto LSC.
+"""Inferencia del proyecto LSC (propiedad de Acosta).
 
 API pública consumida por ``api/adapters/real.py``:
 

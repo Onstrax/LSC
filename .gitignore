@@ -36,3 +36,10 @@ playwright-report/
 # Varios
 .DS_Store
 *.log
+
+# Corpus LSC70 sin la carpeta externa "Speak in…" (imágenes de personas reales; NUNCA en Git)
+LSC70/
+artifacts/data/
+artifacts/models/
+reports/models_synthetic/
+*.keras

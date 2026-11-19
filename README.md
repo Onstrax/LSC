@@ -5,7 +5,7 @@ Colombiana (LSC), la envía a un servicio FastAPI, coordina el **extractor de
 características** (Ortiz) y el **predictor** (Acosta), y presenta una sugerencia
 de etiqueta comprensible al usuario.
 
-Este repositorio contiene el **30 % del proyecto** que corresponde a Juan
+Este repositorio contiene el **33 % del proyecto** que corresponde a Juan
 Esteban Álvarez García: interfaz, API, despliegue, pruebas de uso, medición de
 latencia y evidencia para el artículo y la exposición. El reconocimiento en sí
 (extractor y modelo) lo aportan los componentes vecinos a través de contratos

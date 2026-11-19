@@ -43,4 +43,4 @@ detector_versions:
   hands: mediapipe-tasks:1.2.2:hand_landmarker.task
 model_asset_hashes:
   pose: 4eaa5eb7a98365221087693fcc286334cf0858e2eb6e15b506aa4a7ecdcec4ad
-  hands: fbc2a30080c3c557093b5ddfc334698132eb341044cceee322ccf8bcf3607cde1
+  hands: fbc2a30080c3c557093b5ddfc334698132eb341044ccee322ccf8bcf3607cde1

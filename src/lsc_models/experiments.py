@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from .config import RunSpec, expand_runs, load_config
+from .config import FAST_OVERRIDES, ConfigError, RunSpec, deep_merge, expand_runs, load_config
 from .data import Bundle
 
 
@@ -33,12 +33,17 @@ def run_all(
     only: list[str] | None = None,
     overrides: dict | None = None,
     force: bool = False,
+    fast: bool = False,
 ) -> list[dict]:
     from .train import train_one_run
 
+    if fast:
+        overrides = deep_merge(overrides or {}, FAST_OVERRIDES)
     cfg = load_config(config_path, overrides)
     bpath = Path(bundle_path) if bundle_path else Path(cfg["data"]["bundle_dir"]) / cfg["data"]["features_file"]
     bundle = Bundle(bpath)
+    if fast and not bundle.synthetic:
+        raise ConfigError("--fast (presupuesto reducido) solo se permite con datos sintéticos, nunca con datos reales")
     runs_dir = Path(out_dir) / "runs"
     runs_dir.mkdir(parents=True, exist_ok=True)
     results = []

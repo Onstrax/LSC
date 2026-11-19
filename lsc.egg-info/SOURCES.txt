@@ -1,0 +1,7 @@
+README.md
+pyproject.toml
+lsc.egg-info/PKG-INFO
+lsc.egg-info/SOURCES.txt
+lsc.egg-info/dependency_links.txt
+lsc.egg-info/requires.txt
+lsc.egg-info/top_level.txt

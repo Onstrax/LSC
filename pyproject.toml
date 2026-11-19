@@ -26,6 +26,15 @@ train = [
   "scikit-learn>=1.4",
   "matplotlib>=3.8",
 ]
+serve = [                       # imagen de despliegue: API + extractor MediaPipe + modelo Keras
+  "tensorflow-cpu>=2.17,<3",
+  "mediapipe>=0.10.21,<0.11",
+  "opencv-python-headless>=4.10",
+  "fastapi>=0.111,<1.0",
+  "uvicorn[standard]>=0.30",
+  "python-multipart>=0.0.9",
+  "pillow>=10.3",
+]
 app = [
   "fastapi>=0.111,<1.0",
   "uvicorn[standard]>=0.30",
@@ -38,16 +47,4 @@ e2e = ["playwright>=1.44", "pytest-playwright>=0.5"]
 [tool.setuptools]
 packages = []
 
-[tool.pytest.ini_options]
-# NOTA: mientras exista pytest.ini (Juan), pytest lo prefiere a esta sección.
-# Se solicita a Juan (issue) retirarlo para que rija esta configuración unificada.
-markers = [
-  "realmodel: requiere model.keras + .task reales (excluir en CI rápida)",
-  "e2e: pruebas de navegador con Playwright",
-  "slow: pruebas lentas (latencia, sesiones prolongadas)",
-]
-testpaths = [
-  "tests/contracts", "tests/data", "tests/features",
-  "tests/models", "tests/inference", "tests/app",
-]
-addopts = "-ra"
+# La configuración de pytest vive en pytest.ini (única fuente de verdad).

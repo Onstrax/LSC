@@ -145,11 +145,15 @@ def load_labels(settings: Settings) -> list[str]:
     with labels_path.open("r", encoding="utf-8") as fh:
         data = json.load(fh)
 
-    # Aceptar dos formatos: lista ordenada, o {"labels": [...]} / {"0": "Hola", ...}.
+    # Formatos aceptados: lista ordenada, {"labels": [...]}, {"0": "Hola", ...}. Los elementos pueden
+    # ser textos o los objetos del contrato de Ortiz ({"class_id", "display_text", ...}).
     if isinstance(data, dict) and "labels" in data:
         data = data["labels"]
     if isinstance(data, dict):
-        labels = [data[str(i)] for i in range(NUM_CLASSES)]
+        try:
+            labels = [data[str(i)] for i in range(NUM_CLASSES)]
+        except KeyError as exc:
+            raise ConfigError(f"labels.json: falta la clase {exc}.") from exc
     elif isinstance(data, list):
         labels = list(data)
     else:
@@ -159,7 +163,29 @@ def load_labels(settings: Settings) -> list[str]:
         raise ConfigError(
             f"labels.json tiene {len(labels)} etiquetas; se esperaban {NUM_CLASSES}."
         )
+    labels = _label_texts(labels)
+    if labels != list(CANONICAL_LABEL_ORDER):
+        raise ConfigError(
+            "labels.json no sigue el orden canónico de clases "
+            f"(esperado {list(CANONICAL_LABEL_ORDER)}; recibido {labels}). "
+            "Servir con otro orden etiquetaría mal las señas."
+        )
     return labels
+
+
+def _label_texts(items: list) -> list[str]:
+    """Normaliza elementos a textos. Objetos con ``class_id`` se ordenan y validan 0..N-1."""
+    if all(isinstance(x, str) for x in items):
+        return list(items)
+    if all(isinstance(x, dict) for x in items):
+        try:
+            by_id = {int(x["class_id"]): str(x["display_text"]) for x in items}
+        except (KeyError, TypeError, ValueError) as exc:
+            raise ConfigError("labels.json: cada objeto requiere 'class_id' y 'display_text'.") from exc
+        if sorted(by_id) != list(range(len(items))):
+            raise ConfigError("labels.json: los class_id deben ser 0..N-1 sin repetir.")
+        return [by_id[i] for i in range(len(items))]
+    raise ConfigError("labels.json mezcla textos y objetos; formato no reconocido.")
 
 
 def capture_protocol_dict() -> dict:

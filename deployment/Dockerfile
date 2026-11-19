@@ -1,60 +1,57 @@
-# Imagen de la aplicación de Juan (SDD §14).
+# Imagen de la aplicación completa (API + interfaz + extractor MediaPipe + modelo Keras).
+# Integrada por Acosta sobre la base de Juan (SDD §14).
 #
-# - Usuario NO root.
-# - Uvicorn escucha 0.0.0.0:8000 DENTRO del contenedor, un trabajador, sin reload.
-# - Los recursos visuales se distribuyen localmente (sin CDN).
-# - La cámara permanece en el navegador del anfitrión: NO se monta /dev/video,
-#   no se usa modo privilegiado ni la red del host.
+# - Usuario NO root, sistema de archivos de solo lectura (ver compose.yaml), un solo trabajador.
+# - Uvicorn escucha 0.0.0.0:8000 DENTRO del contenedor; compose lo publica solo en 127.0.0.1.
+# - La cámara permanece en el navegador del anfitrión: NO se monta /dev/video.
+# - Los artefactos (model.keras, .task, manifest...) se MONTAN en /artifacts en solo lectura;
+#   no se hornean en la imagen. Se generan con `python -m src.lsc_models export-artifacts`.
+# - Python 3.11: el conjunto de dependencias se verificó con `pip install --dry-run` para 3.11.
 #
-# NOTA DE COMPATIBILIDAD: Python 3.11 es el punto de partida acordado, sujeto a
-# la prueba de compatibilidad del proyecto con MediaPipe y TensorFlow/Keras.
-# La imagen base y las dependencias pesadas (modelo/extractor) se fijan en el
-# lock compartido de Acosta tras verificar compatibilidad. Esta imagen instala
-# las dependencias de la APLICACIÓN; el lock raíz añade las de inferencia.
+# Construir (desde la raíz del repo):  docker compose -f deployment/compose.yaml build
 
 FROM python:3.11-slim AS base
 
-# Evitar escritura de .pyc y forzar salida sin buffer para logs legibles.
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
+    PYTHONPATH=/app \
     LSC_MODE=real \
     LSC_ARTIFACTS_DIR=/artifacts \
     LSC_HOST=0.0.0.0 \
-    LSC_PORT=8000
+    LSC_PORT=8000 \
+    TF_CPP_MIN_LOG_LEVEL=3 \
+    HOME=/tmp \
+    KERAS_HOME=/tmp/.keras
 
-# curl para el healthcheck (sin dependencias de red en ejecución ordinaria).
+# curl: healthcheck. libgl1/libglib2.0-0: las ruedas de OpenCV (dependencia de MediaPipe) los cargan.
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl \
+    && apt-get install -y --no-install-recommends curl libgl1 libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
-# Usuario no root.
 RUN useradd --create-home --uid 10001 appuser
 WORKDIR /app
 
-# Instalar dependencias de la aplicación primero (capa cacheable).
-# En el repositorio final, Acosta integra el lock raíz; aquí usamos el
-# requirements de la aplicación para una imagen autosuficiente de la UI/API.
-COPY deployment/requirements-app.txt /app/deployment/requirements-app.txt
+# Dependencias primero (capa cacheable). pyproject declara solo dependencias (packages = []).
+COPY pyproject.toml /app/pyproject.toml
 RUN pip install --upgrade pip \
-    && pip install -r /app/deployment/requirements-app.txt
+    && pip install ".[serve]"
 
-# Copiar el código del módulo de Juan.
+# Código: API y UI (Juan), extractor (Ortiz), Predictor/DecisionPolicy y capas Keras (Acosta), contratos.
 COPY api/ /app/api/
 COPY app/ /app/app/
+COPY src/ /app/src/
+COPY contracts/ /app/contracts/
 COPY deployment/ /app/deployment/
 
-# Directorio de artefactos montado en solo lectura por compose.
 RUN mkdir -p /artifacts && chown -R appuser:appuser /app /artifacts
-
 USER appuser
 
 EXPOSE 8000
 
-# Healthcheck contra /api/v1/health con periodo de arranque holgado.
-HEALTHCHECK --interval=15s --timeout=5s --start-period=40s --retries=5 \
+# TensorFlow tarda en cargar: periodo de arranque holgado.
+HEALTHCHECK --interval=15s --timeout=5s --start-period=90s --retries=5 \
     CMD curl -fsS http://127.0.0.1:8000/api/v1/health || exit 1
 
-# Un solo trabajador, sin reload.
 CMD ["python", "-m", "uvicorn", "api.main:app", \
      "--host", "0.0.0.0", "--port", "8000", "--workers", "1", "--no-use-colors"]

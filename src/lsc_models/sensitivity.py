@@ -58,10 +58,15 @@ def quality_accounting(bundle: Bundle) -> list[dict]:
     return rows
 
 
-def run_sensitivity(bundle: Bundle, runs_dir: str | Path, out_dir: str | Path, cfg: dict) -> Path:
+def run_sensitivity(bundle: Bundle, runs_dir: str | Path, out_dir: str | Path, cfg: dict, *, fast: bool = False) -> Path:
     import keras
 
-    scfg = cfg["sensitivity"]
+    from . import custom_layers  # noqa: F401  (registra PositionalEmbedding)
+    from .config import FAST_OVERRIDES, ConfigError
+
+    if fast and not bundle.synthetic:
+        raise ConfigError("--fast solo se permite con datos sintéticos")
+    scfg = FAST_OVERRIDES["sensitivity"] | {"seed": cfg["sensitivity"]["seed"]} if fast else cfg["sensitivity"]
     va = bundle.load_split("val")
     p = va.processable()
     out = Path(out_dir)

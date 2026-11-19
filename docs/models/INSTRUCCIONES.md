@@ -42,7 +42,7 @@ Si algo falla: `python -m src.lsc_models verify --trace`.
 python -m pytest tests/contracts tests/data tests/features tests/models tests/inference tests/app -q
 ```
 Esperado: todo en verde; 1 omitida si usa Python distinto de 3.11 (comprobación de versión de Ortiz).
-(No use `pytest` a secas: `pytest.ini` de Juan solo apunta a `tests/app` y `tests/e2e`.)
+(`python -m pytest` a secas ahora ejecuta todas las suites; e2e se omite si no hay Playwright.)
 
 ## 3. Generar `features.npz` REAL
 
@@ -62,9 +62,10 @@ automáticamente si faltan (desactivar con `--no-download`).
 
 **b) El corpus LSC70W — descarga manual (una vez).** Abra
 https://data.mendeley.com/datasets/9ssyn8tff5/2 (DOI 10.17632/9ssyn8tff5.2, CC BY 4.0), descargue el
-conjunto y descomprímalo en la raíz del repo para que exista
-`Speak in Colombian Sign Language A Dynamic LSC70 Database/LSC70/LSC70/LSC70W`
-(otra ubicación: `--raw-dir "<ruta>"`).
+conjunto y descomprímalo **dentro del repo**. Puede quedar como `LSC70/LSC70/LSC70W` o como
+`Speak in Colombian Sign Language …/LSC70/LSC70/LSC70W`: `prepare-data` busca sola una carpeta llamada
+`LSC70W` que contenga `Per01`, `Per02`… Solo se usa `LSC70W`; `LSC70AN` y `LSC70ANH` se ignoran.
+Si la dejó fuera del repo o hay varias copias: `--raw-dir "<ruta a LSC70W>"` (también acepta la carpeta superior).
 
 Luego:
 ```bash
@@ -76,6 +77,15 @@ diciendo exactamente qué; no inventa datos.
 
 Solo para ver la tubería con datos de mentira: `python -m src.lsc_models prepare-data --synthetic`
 (escribe en `artifacts/data/synthetic/`, nunca en `v1`).
+
+## 3b. Alinear el bundle con el contrato corregido (si ya había generado `features.npz`)
+
+El hash de `hand_landmarker.task` del contrato estaba mal escrito y se corrigió (ver `docs/models/compat.md`).
+Sus características NO cambian; solo hay que alinear el registro de procedencia del bundle:
+```bash
+python -m src.lsc_models sync-bundle-spec
+```
+Debe decir `migrado` (o `ya sincronizado`) y `validación: OK`. No hace falta repetir `prepare-data`.
 
 ## 4. Las 12 ejecuciones y el análisis (A1–A3)
 
@@ -98,13 +108,18 @@ Salidas en `reports/models/` (ver su README). Para leerlas:
 Señales de que **no** hay evidencia: `evidence_valid: false` en `selection.json` o en un `metrics.json`
 (datos sintéticos). Sin datos reales, `run-all` sin `--fast` simplemente no arranca.
 
-## 5. Congelar (18 nov.)
+## 5. Congelar, exportar y evaluar el test (una sola vez)
 
 ```bash
-python -m src.lsc_models freeze
+python -m src.lsc_models freeze                      # crea reports/models/freeze.json
+python -m src.lsc_models export-artifacts --force    # paquete para la app + umbral provisional (validación)
+python -m src.lsc_models final-eval                  # ÚNICA lectura del test; no se puede repetir
 ```
-Crea `reports/models/freeze.json` y habilita **una sola** lectura del test (A4). Después de esto no se
-cambian configuración ni modelos; rechaza ejecuciones sintéticas.
+`freeze` rechaza resultados sintéticos y habilita el test. `final-eval` verifica por SHA-256 que modelos y
+datos son los congelados, evalúa las 3 semillas de la configuración elegida y el modelo desplegado (semilla 17),
+informa por separado procesables / integral / aceptación por umbral, compara con las metas y marca en el paquete
+que el test ya se usó. **El rechazo de negativos queda "NO MEDIDO"** (requiere capturas reales).
+Hoja de ruta completa y uso de Claude Code: `docs/models/ROADMAP_FINAL.md`.
 
 ## 6. Probar la aplicación completa
 
@@ -146,6 +161,12 @@ python -m src.lsc_models run-app --mode real --open
 umbral **provisional** con validación (cobertura ≥ 80 %) y deja `requires_confirmation: true`: hasta que
 A4 mida el rechazo de negativos, la interfaz debe presentar la salida como **sugerencia a confirmar**.
 Rechaza datos sintéticos salvo `--allow-synthetic`.
+
+### Pruebas de navegador (opcional)
+```bash
+pip install -e ".[e2e]" && python -m playwright install chromium
+python -m pytest tests/e2e -q      # 7 pruebas con cámara simulada
+```
 
 ### Contenedor (Juan) 
 `docker compose -f deployment/compose.yaml up --build -d` y `python deployment/check_ready.py --url http://127.0.0.1:8000`

@@ -81,23 +81,40 @@ app = FastAPI(
 # ---------------------------------------------------------------------------
 # Middleware: validación de Host/Origin para el origen local (sin CORS abierto)
 # ---------------------------------------------------------------------------
+def _is_same_origin(origin: str, host_header: str) -> bool:
+    """El Origin es el propio servicio: su autoridad (host:puerto) es la de la cabecera Host.
+
+    Los navegadores envían ``Origin`` al cargar scripts de módulo y en los POST aun siendo del mismo
+    origen; con una lista fija de puertos la UI quedaba sin JavaScript fuera del puerto 8000.
+    La cabecera Host ya se valida contra ``allowed_hosts`` (anti DNS-rebinding).
+    """
+    from urllib.parse import urlsplit
+
+    try:
+        parts = urlsplit(origin)
+    except ValueError:
+        return False
+    return parts.scheme in ("http", "https") and bool(parts.netloc) and parts.netloc == host_header
+
+
 @app.middleware("http")
 async def origin_guard(request: Request, call_next):
     state = request.app.state.lsc
     settings = state.settings
-    origin = request.headers.get("origin")
-    # El uso de CLI local sin Origin se permite (documentado para pruebas).
-    if origin is not None and origin not in settings.allowed_origins:
-        return JSONResponse(
-            status_code=403,
-            content={"detail": "Origin no permitido para el servicio local."},
-        )
+    host_full = request.headers.get("host") or ""
     # Validación de Host (cabecera host puede incluir puerto).
-    host_header = (request.headers.get("host") or "").split(":")[0]
-    if host_header and host_header not in settings.allowed_hosts:
+    host_name = host_full.split(":")[0]
+    if host_name and host_name not in settings.allowed_hosts:
         return JSONResponse(
             status_code=403,
             content={"detail": "Host no permitido para el servicio local."},
+        )
+    origin = request.headers.get("origin")
+    # El uso de CLI local sin Origin se permite (documentado para pruebas).
+    if origin is not None and origin not in settings.allowed_origins and not _is_same_origin(origin, host_full):
+        return JSONResponse(
+            status_code=403,
+            content={"detail": "Origin no permitido para el servicio local."},
         )
     return await call_next(request)
 

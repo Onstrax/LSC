@@ -9,10 +9,14 @@
 # (Tasks) para el camino real; pydantic v2, jsonschema, PyYAML y pytest para
 # contratos y suite rápida sin red.
 
-numpy==2.2.3
-opencv-python-headless==4.10.0.84
-mediapipe==0.10.21
-pydantic==2.12.5
-jsonschema==4.23.0
-PyYAML==6.0.2
-pytest==9.1.1
+# CORRECCIÓN (integración, Acosta): los pines anteriores (numpy==2.2.3, mediapipe==0.10.21, ...) eran
+# IRRESOLUBLES junto a TensorFlow (mediapipe 0.10.21 exige protobuf<5 y numpy<2; TF 2.21 exige
+# protobuf>=6.31). Se usan rangos verificados con `pip install --dry-run` en Python 3.11 y con la suite
+# completa en Python 3.12. Versiones concretas probadas: docs/models/compat.md.
+numpy>=2.0,<3
+opencv-python-headless>=4.10
+mediapipe>=0.10.21,<0.11
+pydantic>=2.7,<3
+jsonschema>=4.23
+PyYAML>=6.0
+pytest>=8.2

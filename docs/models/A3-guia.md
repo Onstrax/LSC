@@ -46,9 +46,9 @@ Test único, umbral de rechazo, negativos, `thresholds.json`, `preprocessing.jso
 
 ## Límites a tener presentes al leer los resultados
 
-- La validación son 4 personas (~40 secuencias, ~37 procesables según el reporte de Ortiz): una
-  diferencia de 0,01 en F1 macro equivale a una o dos secuencias. La regla de desempate por
-  latencia se activará con frecuencia y las diferencias entre configuraciones serán ruido
-  salvo que sean grandes. Debe decirse así en la discusión.
+- La validación son 7 personas (70 secuencias, 63 procesables): una secuencia equivale a ~0,016 de
+  exactitud, y 0,01 de F1 macro es menos que una secuencia. La regla de desempate por latencia se activará
+  con frecuencia y las diferencias pequeñas entre configuraciones son ruido. Decirlo así en la discusión.
+  Con solo 3 semillas, reporte siempre media ± desviación y los valores por semilla.
 - `p95_latency_ms` es solo de inferencia del modelo (lote 1). La meta de p95 < 2 s es de
   extremo a extremo y la mide Juan (J4).

@@ -1,4 +1,4 @@
-"""Política de decisión sobre probabilidades.
+"""Política de decisión sobre probabilidades (propiedad de Acosta).
 
 Modo ``max_softmax_threshold``: se acepta la clase de mayor probabilidad si su
 probabilidad es >= ``threshold`` (comparación exacta; desempate: menor índice).

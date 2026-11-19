@@ -130,3 +130,67 @@ def test_download_offline_reports_clear_error(tmp_path):
 
     with pytest.raises(prepare.PrepareError, match="Sin internet"):
         prepare.download_models(tmp_path, fetch=offline, spec=_spec_for(b"a", b"b"))
+
+
+def _mk_corpus(root):
+    for sub in ("LSC70W", "LSC70ANH", "LSC70AN"):
+        (root / "LSC70" / "LSC70" / sub).mkdir(parents=True)
+    for per in ("Per01", "Per02"):
+        (root / "LSC70" / "LSC70" / "LSC70W" / per / "HOLA").mkdir(parents=True)
+    (root / "LSC70" / "LSC70" / "LSC70ANH" / "Per01").mkdir()  # hermanas con Per##, NO deben usarse
+    return root / "LSC70" / "LSC70" / "LSC70W"
+
+
+def test_autodetects_lsc70w_without_outer_folder(tmp_path):
+    w = _mk_corpus(tmp_path)
+    assert prepare.resolve_raw_dir(None, search_from=tmp_path).resolve() == w.resolve()
+
+
+def test_descends_from_parent_folder(tmp_path):
+    w = _mk_corpus(tmp_path)
+    assert prepare.resolve_raw_dir(tmp_path / "LSC70").resolve() == w.resolve()
+    assert prepare.resolve_raw_dir(w) == w  # ya es LSC70W
+
+
+def test_sibling_subsets_are_ignored(tmp_path):
+    _mk_corpus(tmp_path)
+    found = prepare.find_lsc70w(tmp_path)
+    assert len(found) == 1 and found[0].name == "LSC70W"
+
+
+def test_ambiguous_corpus_asks_user(tmp_path):
+    _mk_corpus(tmp_path / "a")
+    _mk_corpus(tmp_path / "b")
+    with pytest.raises(prepare.AmbiguousRawDir, match="--raw-dir"):
+        prepare.resolve_raw_dir(None, search_from=tmp_path)
+
+
+def test_explicit_missing_path_is_not_replaced(tmp_path):
+    p = tmp_path / "nope"
+    assert prepare.resolve_raw_dir(p) == p
+
+
+def test_download_accepts_by_prefix_when_contract_hash_is_garbled(tmp_path):
+    import hashlib
+    import json
+
+    real = hashlib.sha256(b"hands-bytes").hexdigest()
+    garbled = real[:12] + "0" * 52 + "1"  # 65 caracteres, mismo comienzo, resto distinto
+    spec = {"model_asset_hashes": {"pose": hashlib.sha256(b"p").hexdigest(), "hands": garbled}}
+    blobs = {u: b"p" for u in prepare.POSE_CANDIDATES} | {prepare.HANDS_CANDIDATES[0]: b"hands-bytes"}
+    st = prepare.download_models(tmp_path, fetch=lambda u: blobs[u], spec=spec)
+    assert "POR PREFIJO" in st["hands"] and real in st["hands"]
+    obs = json.loads((tmp_path / "hashes_observed.json").read_text())
+    assert obs["hands"]["sha256"] == real and obs["hands"]["match"] == "prefijo"
+    assert obs["pose"]["match"] == "exacto"
+
+
+def test_download_rejects_when_even_the_prefix_differs(tmp_path):
+    import hashlib
+
+    garbled = "a" * 65
+    spec = {"model_asset_hashes": {"pose": hashlib.sha256(b"p").hexdigest(), "hands": garbled}}
+    blobs = {u: b"p" for u in prepare.POSE_CANDIDATES} | {prepare.HANDS_CANDIDATES[0]: b"hands-bytes"}
+    with pytest.raises(prepare.PrepareError, match="ninguna variante coincide"):
+        prepare.download_models(tmp_path, fetch=lambda u: blobs[u], spec=spec)
+    assert not (tmp_path / "hand_landmarker.task").exists()

@@ -1,15 +1,15 @@
 # Acuerdo de propiedad y reparto — Proyecto LSC
 
-Reparto aprobado **30 / 30 / 40** (ver propuesta Fase 1). Este archivo fija qué
+Reparto aprobado **33 / 33 / 34** (acuerdo de distribución del 22 oct.–4 dic. de 2026). Este archivo fija qué
 rutas pertenecen a cada responsable para evitar colisiones y dobles contratos.
 
 ## Responsables
 
 | Persona | Código de estudiante | Parte | Entregable principal |
 | --- | --- | --- | --- |
-| Juan Esteban Álvarez García | 202212030 | 30 % | Aplicación web local (UI + API + despliegue + uso) |
-| Daniel Felipe Ortiz Vallejo | 202221234 | 30 % | Extractor de características, contratos de datos, consentimiento, revisión lingüística |
-| Daniel Alejandro Acosta Avila | 202011236 | 40 % | Modelo, probabilidades, política de aceptación, versiones, CI raíz |
+| Juan Esteban Álvarez García | 202212030 | 33 % | Aplicación web local (UI + API + despliegue + uso) |
+| Daniel Felipe Ortiz Vallejo | 202221234 | 33 % | Extractor de características, contratos de datos, consentimiento, revisión lingüística |
+| Daniel Alejandro Acosta Avila | 202011236 | 34 % | Modelo, probabilidades, política de aceptación, versiones, CI raíz |
 
 ## Propiedad de rutas
 

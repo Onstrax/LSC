@@ -26,7 +26,8 @@ services:
       LSC_ALLOWED_HOSTS: "localhost,127.0.0.1"
     volumes:
       # Artefactos de Acosta (modelo) y Ortiz (.task) en SOLO LECTURA.
-      # Prepare la ruta ./artifacts en el host antes de arrancar en modo real.
+      # Prepare ./artifacts con `python -m src.lsc_models export-artifacts` (y los .task) antes de arrancar
+      # en modo real. Para ver la interfaz sin modelo: LSC_MODE=mock docker compose ... up
       - type: bind
         source: ../artifacts
         target: /artifacts
@@ -43,4 +44,4 @@ services:
       interval: 15s
       timeout: 5s
       retries: 5
-      start_period: 40s
+      start_period: 90s

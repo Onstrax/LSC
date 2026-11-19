@@ -20,3 +20,10 @@ dist/
 release/
 # Los artefactos NO se copian a la imagen: se montan en solo lectura por compose.
 artifacts/
+
+# El corpus y los datos NUNCA entran al contexto de build
+LSC70/
+Speak in Colombian Sign Language*/
+artifacts/
+.github/
+*.keras

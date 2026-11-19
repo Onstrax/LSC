@@ -13,12 +13,18 @@ import hashlib
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
 
 import yaml
 
 DEFAULT_CONFIG = Path("configs/train/experiments.yaml")
 REQUIRED_SEEDS = (17, 29, 43)
+# Presupuesto reducido SOLO para verificar la tubería con datos sintéticos.
+# run-all/sensitivity rechazan --fast si el bundle no es sintético.
+FAST_OVERRIDES = {
+    "training": {"max_epochs": 3, "patience": 2, "min_epochs": 1},
+    "latency": {"warmup": 1, "repeats": 5},
+    "sensitivity": {"hand_dropout_fractions": [0.0, 0.33, 0.67], "repetitions": 2},
+}
 REQUIRED_CONFIGS = ("bilstm_noaug", "bilstm_aug", "transformer_noaug", "transformer_aug")
 
 
