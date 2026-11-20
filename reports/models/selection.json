@@ -1,0 +1,28 @@
+{
+  "chosen_config": "transformer_aug",
+  "reason": "empate técnico (<= 0.01) entre ['transformer_noaug', 'transformer_aug']; gana menor p95 de inferencia",
+  "best_val_macro_f1_mean": 0.9247395197395197,
+  "candidates_within_tolerance": [
+    "transformer_noaug",
+    "transformer_aug"
+  ],
+  "tie_tolerance": 0.01,
+  "deployed_run": "transformer_aug__seed17",
+  "evidence_valid": true,
+  "goals_vs_validation": {
+    "scope": "validación, muestras procesables, media de 3 semillas (NO es test)",
+    "accuracy": {
+      "value": 0.9153439153439153,
+      "goal": 0.85,
+      "met": true
+    },
+    "macro_f1": {
+      "value": 0.915462407962408,
+      "goal": 0.8,
+      "met": true
+    }
+  },
+  "data_sha256": [
+    "fcedb70650a9719e40397bcb7338ea712613e5345cf7c07aeed4fdc9fb6cb660"
+  ]
+}

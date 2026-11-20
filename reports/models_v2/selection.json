@@ -1,0 +1,28 @@
+{
+  "chosen_config": "bilstm_robust",
+  "reason": "mayor val_mixed_f1 medio",
+  "best_val_macro_f1_mean": 0.9128185760998262,
+  "candidates_within_tolerance": [
+    "bilstm_robust"
+  ],
+  "tie_tolerance": 0.01,
+  "selection_metric": "val_mixed_f1",
+  "deployed_run": "bilstm_robust__seed17",
+  "evidence_valid": true,
+  "goals_vs_validation": {
+    "scope": "validación, muestras procesables, media de 3 semillas (NO es test)",
+    "accuracy": {
+      "value": 0.9417989417989417,
+      "goal": 0.85,
+      "met": true
+    },
+    "macro_f1": {
+      "value": 0.9383760683760684,
+      "goal": 0.8,
+      "met": true
+    }
+  },
+  "data_sha256": [
+    "fcedb70650a9719e40397bcb7338ea712613e5345cf7c07aeed4fdc9fb6cb660"
+  ]
+}

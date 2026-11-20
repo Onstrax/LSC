@@ -24,6 +24,8 @@
       <section class="panel" aria-labelledby="vocab-title">
         <h2 id="vocab-title">Vocabulario admitido (10 señas)</h2>
         <ul id="vocabList" class="vocab"></ul>
+        <p class="hint">Elija una seña para ver cómo se hace.</p>
+        <div id="signRef" class="signref" aria-live="polite" hidden></div>
         <p class="hint">
           Encuadre <strong>rostro, hombros y manos</strong>. Las instrucciones y
           la cuenta regresiva son visuales; no necesita sonido.
@@ -57,6 +59,7 @@
         <div id="resultAccepted" class="result accepted" hidden>
           <p class="result-label">Seña sugerida</p>
           <p id="suggestionText" class="suggestion"></p>
+          <p id="confidenceNote" class="note"></p>
           <p id="vocabNote" class="note"></p>
           <div class="controls">
             <button id="confirmBtn" type="button" class="btn primary">Confirmar</button>

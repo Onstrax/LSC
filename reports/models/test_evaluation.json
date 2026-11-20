@@ -1,0 +1,123 @@
+{
+  "schema_version": "lsc.test_evaluation.v1",
+  "evaluated_at_utc": "2026-11-20T00:13:42Z",
+  "evidence_valid": true,
+  "chosen_config": "transformer_aug",
+  "deployed_run": "transformer_aug__seed17",
+  "freeze_sha256": "01bbcac40e5873b2145cf236a4f327952e06169b758dad85cd9fd7131c5f40fa",
+  "data_sha256": "fcedb70650a9719e40397bcb7338ea712613e5345cf7c07aeed4fdc9fb6cb660",
+  "test_counts": {
+    "n": 140,
+    "n_processable": 131
+  },
+  "per_seed": [
+    {
+      "run_id": "transformer_aug__seed17",
+      "seed": 17,
+      "n": 140,
+      "n_processable": 131,
+      "quality_coverage": 0.9357142857142857,
+      "accuracy_processable": 0.8702290076335878,
+      "macro_f1_processable": 0.8718980622791875,
+      "loss_processable": 0.4212542176246643,
+      "accuracy_integral": 0.8142857142857143,
+      "macro_f1_integral": 0.8406064367083858
+    },
+    {
+      "run_id": "transformer_aug__seed29",
+      "seed": 29,
+      "n": 140,
+      "n_processable": 131,
+      "quality_coverage": 0.9357142857142857,
+      "accuracy_processable": 0.8854961832061069,
+      "macro_f1_processable": 0.8860952803976376,
+      "loss_processable": 0.46942049264907837,
+      "accuracy_integral": 0.8285714285714286,
+      "macro_f1_integral": 0.8532662446249404
+    },
+    {
+      "run_id": "transformer_aug__seed43",
+      "seed": 43,
+      "n": 140,
+      "n_processable": 131,
+      "quality_coverage": 0.9357142857142857,
+      "accuracy_processable": 0.8778625954198473,
+      "macro_f1_processable": 0.8792683725292421,
+      "loss_processable": 0.37608814239501953,
+      "accuracy_integral": 0.8214285714285714,
+      "macro_f1_integral": 0.8464325431911639
+    }
+  ],
+  "summary_over_seeds": {
+    "accuracy_processable": {
+      "mean": 0.8778625954198475,
+      "std": 0.007633587786259555,
+      "min": 0.8702290076335878,
+      "max": 0.8854961832061069
+    },
+    "macro_f1_processable": {
+      "mean": 0.8790872384020224,
+      "std": 0.007100342087163451,
+      "min": 0.8718980622791875,
+      "max": 0.8860952803976376
+    },
+    "accuracy_integral": {
+      "mean": 0.8214285714285715,
+      "std": 0.007142857142857173,
+      "min": 0.8142857142857143,
+      "max": 0.8285714285714286
+    },
+    "macro_f1_integral": {
+      "mean": 0.8467684081748299,
+      "std": 0.006336583313304941,
+      "min": 0.8406064367083858,
+      "max": 0.8532662446249404
+    }
+  },
+  "deployed": {
+    "run_id": "transformer_aug__seed17",
+    "seed": 17,
+    "n": 140,
+    "n_processable": 131,
+    "quality_coverage": 0.9357142857142857,
+    "accuracy_processable": 0.8702290076335878,
+    "macro_f1_processable": 0.8718980622791875,
+    "loss_processable": 0.4212542176246643,
+    "accuracy_integral": 0.8142857142857143,
+    "macro_f1_integral": 0.8406064367083858,
+    "per_class_file": "per_class_test_deployed.csv",
+    "acceptance": {
+      "threshold": 0.9401649832725525,
+      "n_processable": 131,
+      "n_accepted": 106,
+      "coverage_processable": 0.8091603053435115,
+      "accuracy_among_accepted": 0.9622641509433962,
+      "accepted_over_all_samples": 0.7571428571428571
+    }
+  },
+  "baseline_majority": {
+    "n": 140,
+    "n_processable": 131,
+    "quality_coverage": 0.9357142857142857,
+    "accuracy_processable": 0.09923664122137404,
+    "macro_f1_processable": 0.018055555555555554,
+    "loss_processable": 24.88901138305664,
+    "accuracy_integral": 0.09285714285714286,
+    "macro_f1_integral": 0.01793103448275862
+  },
+  "goals_vs_deployed": {
+    "scope": "test, muestras procesables, modelo desplegado (semilla 17); la latencia p95 de extremo a extremo la mide J4",
+    "accuracy": {
+      "value": 0.8702290076335878,
+      "goal": 0.85,
+      "met": true
+    },
+    "macro_f1": {
+      "value": 0.8718980622791875,
+      "goal": 0.8,
+      "met": true
+    }
+  },
+  "negatives_rejection": "NO MEDIDO (requiere capturas de negativos); la interfaz debe presentar sugerencias a confirmar",
+  "test_used_once": true
+}

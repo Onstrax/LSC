@@ -1,0 +1,65 @@
+{
+  "run_id": "transformer_aug__seed29",
+  "name": "transformer_aug",
+  "seed": 29,
+  "model": "transformer",
+  "augment": true,
+  "config_hash": "6ac43bbf610b12e298d43aa1f1f931b060b552754dced79edfe48fc16fd19968",
+  "data": {
+    "sha256": "fcedb70650a9719e40397bcb7338ea712613e5345cf7c07aeed4fdc9fb6cb660",
+    "synthetic": false,
+    "n_total": 700,
+    "n_train": 490,
+    "n_train_quality_pass": 462,
+    "n_val": 70,
+    "n_val_quality_pass": 63
+  },
+  "evidence_valid": true,
+  "data_source": "features_v1",
+  "best_epoch": 37,
+  "epochs_run": 49,
+  "n_params": 77578,
+  "train": {
+    "n": 462,
+    "accuracy": 0.9891774891774892,
+    "macro_f1": 0.989122508031857
+  },
+  "val": {
+    "n": 70,
+    "n_processable": 63,
+    "quality_coverage": 0.9,
+    "accuracy_processable": 0.9206349206349206,
+    "macro_f1_processable": 0.923458485958486,
+    "loss_processable": 0.4145352244377136,
+    "accuracy_integral": 0.8285714285714286,
+    "macro_f1_integral": 0.8666175491175491
+  },
+  "baseline_majority_val": {
+    "n": 70,
+    "n_processable": 63,
+    "quality_coverage": 0.9,
+    "accuracy_processable": 0.1111111111111111,
+    "macro_f1_processable": 0.02,
+    "loss_processable": 24.56090545654297,
+    "accuracy_integral": 0.1,
+    "macro_f1_integral": 0.02,
+    "majority_class": 6
+  },
+  "latency": {
+    "p50_ms": 29.802099999869824,
+    "p95_ms": 35.17643999966822,
+    "repeats": 200
+  },
+  "runtime_s": 27.24,
+  "environment": {
+    "python": "3.12.10",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "numpy": "2.5.5",
+    "tensorflow": "2.21.0",
+    "keras": "3.15.1"
+  },
+  "split_used": [
+    "train",
+    "val"
+  ]
+}

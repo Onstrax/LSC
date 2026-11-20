@@ -142,6 +142,8 @@ class MockDecisionAdapter:
     ) -> None:
         self.threshold = float(threshold)
         self.policy_version = policy_version
+        # Simulado: la salida siempre se presenta como sugerencia a confirmar.
+        self.requires_confirmation = True
 
     def decide(self, probabilities: np.ndarray) -> DecisionResult:
         probs = np.asarray(probabilities, dtype=np.float32)

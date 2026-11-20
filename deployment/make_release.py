@@ -109,7 +109,7 @@ def main(argv: list[str] | None = None) -> int:
 
     parser = argparse.ArgumentParser(description="Genera release_app.json")
     parser.add_argument("--image", default="lsc-app:local")
-    parser.add_argument("--artifacts", default="artifacts")
+    parser.add_argument("--artifacts", default="artifacts_v2")  # modelo por defecto de la app (v2); v1: --artifacts artifacts
     parser.add_argument("--out", default="release_app.json")
     parser.add_argument(
         "--strict",

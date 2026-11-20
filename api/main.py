@@ -59,6 +59,10 @@ async def lifespan(app: FastAPI):
     app.state.lsc = state
     # Carga síncrona en el arranque (un solo worker dedicado).
     initialize_worker(state)
+    # Volcado local opcional de intentos (solo si LSC_DEBUG_DUMP_DIR está definida).
+    from api.debug_dump import DebugDump
+
+    state.debug_dump = DebugDump.from_env()
     try:
         yield
     finally:
@@ -165,6 +169,9 @@ async def config(request: Request) -> ConfigResponse:
             "requires_request_video_frame_callback": True,
             "single_inference_slot": True,
             "ui_wait_timeout_ms": state.settings.ui_wait_timeout_ms,
+            # La política de decisión pide mostrar la salida como sugerencia a confirmar.
+            # Sin worker listo se asume lo prudente (True).
+            "requires_confirmation": worker.requires_confirmation if worker is not None else True,
         },
         capture_protocol_version=CAPTURE_PROTOCOL_VERSION,
     )
@@ -335,6 +342,10 @@ async def predict(
             client_request_id=client_request_id,
             capture_protocol_version=CAPTURE_PROTOCOL_VERSION,
         )
+
+    # Diagnóstico local opcional (no altera la respuesta; nunca lanza).
+    if state.debug_dump is not None:
+        state.debug_dump.save(raw_frames=raw_frames, meta=meta_dict, result=result, labels=list(state.labels))
 
     # 7) Serializar resultado.
     timings = dict(result.timings_ms)

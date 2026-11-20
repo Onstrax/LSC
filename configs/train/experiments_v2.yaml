@@ -1,0 +1,88 @@
+# Modelo v2 (robusto a la captura en webcam). Propietario: Acosta.
+# NO sustituye a configs/train/experiments.yaml: v1 queda congelado e intacto (freeze.json, test abierto UNA vez).
+# Diferencias con v1: aumentación `train_v2_robust` (recorte de cuadro, mano ausente, escala/traslación), 2 configuraciones
+# (BiLSTM y Transformer, ambas con aumentación) y selección por F1 sobre validación original + validación perturbada.
+# Las reglas de selección y las metas de abajo se fijaron ANTES de entrenar v2; no se cambian después de ver resultados.
+version: train_v2_robust
+
+required_configs: [bilstm_robust, transformer_robust]
+
+data:
+  bundle_dir: artifacts/data/v1          # el mismo bundle que v1; git-ignorado
+  features_file: features.npz
+
+seeds: [17, 29, 43]
+deployed_seed: 17                        # misma regla que v1, fijada antes de entrenar
+
+# Presupuesto idéntico al de v1 y entre arquitecturas.
+training:
+  optimizer: adam
+  learning_rate: 0.001
+  batch_size: 32
+  max_epochs: 80
+  patience: 12                           # épocas sin mejorar la métrica de monitoreo
+  min_epochs: 5
+  monitor: val_mixed_f1                  # media de F1 macro en validación original y validación perturbada; desempate: menor pérdida
+  restore_best: true
+
+augmentation:
+  policy: train_v2_robust                # src/lsc_models/augment_robust.py; solo train
+  params:                                # rangos anclados en el corpus y en la medición de webcam (ver docs/models/v2_robusto.md)
+    p_affine: 0.5
+    scale_range: [0.85, 1.2]
+    shift: 0.1
+    rot_deg: 8.0
+    p_noise: 0.5
+    noise_std: 0.01
+    p_temporal: 0.15
+    p_crop_y: 0.5
+    crop_y_range: [0.5, 1.3]
+    p_crop_x: 0.3
+    crop_x_range: [0.9, 1.8]
+    p_drop_hand: 0.30
+    p_frame_drop: 0.10
+    max_retries: 4
+
+latency:
+  warmup: 20
+  repeats: 200
+
+models:                                  # mismos tamaños que v1
+  bilstm:
+    proj_dim: 64
+    units: 64
+    dropout: 0.3
+  transformer:
+    d_model: 64
+    num_heads: 4
+    num_blocks: 2
+    ff_dim: 128
+    dropout: 0.2
+
+configs:
+  bilstm_robust:      {model: bilstm,      augment: true}
+  transformer_robust: {model: transformer, augment: true}
+
+selection:
+  metric: val_mixed_f1                   # media sobre semillas
+  tie_tolerance: 0.01                    # diferencia <= 0.01 -> gana menor p95 de inferencia
+  tie_breaker: p95_latency_ms
+
+goals:                                   # metas, NO resultados
+  accuracy: 0.85
+  macro_f1: 0.80
+  p95_response_s: 2.0
+  # Metas específicas de v2, declaradas antes de entrenar (se informan aunque no se cumplan):
+  max_drop_original_val: 0.03            # exactitud en validación original no cae más de 0.03 respecto a v1 (v1: 0.915)
+  min_gain_sin_mano_der: 0.15            # mejora de exactitud >= 0.15 sobre v1 en "sin mano derecha"
+  min_gain_recorte_0_7: 0.15             # ...y en "recorte a y = 0.7"
+
+sensitivity:
+  hand_dropout_fractions: [0.0, 0.17, 0.33, 0.5, 0.67]
+  repetitions: 20
+  seed: 20261113
+
+evaluation:
+  robust_val: true                       # evalúa/elige por época con la batería de robustez sobre validación (src/lsc_models/robustness.py)
+  robust_seed: 20261113
+  test_sealed: true                      # el test se abrió UNA vez con v1: no se congela ni se evalúa v2 en test

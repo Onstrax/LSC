@@ -24,6 +24,11 @@ REAL_FILES = ["model.keras", "labels.json", "feature_spec.json", "preprocessing.
               "manifest.json", "pose_landmarker.task", "hand_landmarker.task"]
 
 
+# Paquete que la app carga por defecto: modelo v2 (docs/models/v2_robusto.md). v1, congelado y con cifra de test,
+# sigue intacto en `artifacts/` (`--artifacts artifacts`). Debe coincidir con api.constants.DEFAULT_ARTIFACTS_DIR.
+DEFAULT_APP_ARTIFACTS = "artifacts_v2"
+
+
 def real_prerequisites(artifacts: Path) -> list[str]:
     return [f for f in REAL_FILES if not (artifacts / f).is_file()]
 
@@ -34,24 +39,30 @@ def _env(mode: str, artifacts: Path, port: int) -> dict:
     return env
 
 
-def run_app(mode: str, artifacts: str, port: int, open_browser: bool) -> int:
+def run_app(mode: str, artifacts: str, port: int, open_browser: bool, debug_dump: str | None = None) -> int:
     art = Path(artifacts)
     if mode == "real":
         missing = real_prerequisites(art)
         if missing:
             print(f"Modo real: faltan en {art}: {', '.join(missing)}\n"
-                  "  - modelo/política: `python -m src.lsc_models export-artifacts`\n"
+                  "  - modelo v2 (por defecto): `python -m src.lsc_models export-artifacts --reports reports/models_v2 --out artifacts_v2`\n"
+                  "  - modelo v1 (congelado): `--artifacts artifacts`\n"
                   "  - .task: `python -m src.lsc_models download-models` y luego export-artifacts\n"
                   "  Para ver la interfaz sin modelo: `run-app --mode mock`.", file=sys.stderr)
             return 3
     print(f"Arrancando en modo {mode.upper()} -> http://localhost:{port}  (Ctrl+C para detener)")
+    env = _env(mode, art, port)
+    if debug_dump:
+        env["LSC_DEBUG_DUMP_DIR"] = str(debug_dump)
+        print(f"DIAGNÓSTICO ACTIVO: cada intento se guarda en {debug_dump} (incluye cuadros con tu rostro; "
+              "solo local, nunca a Git). Analízalos con `python -m src.lsc_models diagnose-dump`.")
     if open_browser:
         import threading
         import webbrowser
 
         threading.Timer(3.0, lambda: webbrowser.open(f"http://localhost:{port}")).start()
     return subprocess.call([sys.executable, "-m", "uvicorn", "api.main:app", "--host", "127.0.0.1", "--port", str(port)],
-                           env=_env(mode, art, port))
+                           env=env)
 
 
 # ----------------------------------------------------------------------------

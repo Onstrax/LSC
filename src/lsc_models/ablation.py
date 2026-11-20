@@ -23,13 +23,19 @@ import numpy as np
 from . import metrics as M
 from .config import REQUIRED_CONFIGS, REQUIRED_SEEDS
 
-CONF_ORDER = list(REQUIRED_CONFIGS)
+CONF_ORDER = list(REQUIRED_CONFIGS)  # v1; v2 pasa sus propios nombres (config_names(cfg))
+
+# Métrica de selección declarada en el YAML -> columna del resumen. v1 usa la primera (como siempre).
+SELECTION_METRICS = {
+    "val_macro_f1_processable": "val_macro_f1_processable_mean",
+    "val_mixed_f1": "val_mixed_f1_mean",  # v2: media de F1 original y F1 sobre validación perturbada
+}
 
 
-def load_runs(runs_dir: str | Path) -> list[dict]:
+def load_runs(runs_dir: str | Path, names: list[str] | None = None) -> list[dict]:
     runs_dir = Path(runs_dir)
     out = []
-    for name in CONF_ORDER:
+    for name in (names or CONF_ORDER):
         for seed in REQUIRED_SEEDS:
             p = runs_dir / f"{name}__seed{seed}" / "metrics.json"
             if not p.is_file():
@@ -45,10 +51,10 @@ def _mean_std(vals) -> tuple[float, float]:
 
 def summarize(runs: list[dict]) -> list[dict]:
     rows = []
-    for name in CONF_ORDER:
+    for name in dict.fromkeys(r["name"] for r in runs):  # orden de aparición (v1: el del YAML)
         rs = [r for r in runs if r["name"] == name]
         row = {"config": name, "model": rs[0]["model"], "augment": rs[0]["augment"], "n_seeds": len(rs), "n_params": rs[0]["n_params"]}
-        for key, getter in {
+        getters = {
             "val_accuracy_processable": lambda r: r["val"]["accuracy_processable"],
             "val_macro_f1_processable": lambda r: r["val"]["macro_f1_processable"],
             "val_accuracy_integral": lambda r: r["val"]["accuracy_integral"],
@@ -57,28 +63,39 @@ def summarize(runs: list[dict]) -> list[dict]:
             "train_accuracy": lambda r: r["train"]["accuracy"],
             "best_epoch": lambda r: r["best_epoch"],
             "p95_latency_ms": lambda r: r["latency"]["p95_ms"],
-        }.items():
+        }
+        if all("val_robust" in r for r in rs):  # solo v2
+            getters.update({
+                "val_robust_macro_f1": lambda r: r["val_robust"]["mean"]["macro_f1"],
+                "val_robust_accuracy": lambda r: r["val_robust"]["mean"]["accuracy"],
+                "val_mixed_f1": lambda r: r["val_mixed_f1"],
+            })
+        for key, getter in getters.items():
             m, s = _mean_std([getter(r) for r in rs])
             row[f"{key}_mean"], row[f"{key}_std"] = m, s
         rows.append(row)
     return rows
 
 
-def select_configuration(summary: list[dict], tie_tolerance: float = 0.01) -> dict:
-    best_f1 = max(r["val_macro_f1_processable_mean"] for r in summary)
-    tied = [r for r in summary if best_f1 - r["val_macro_f1_processable_mean"] <= tie_tolerance + 1e-12]
+def select_configuration(summary: list[dict], tie_tolerance: float = 0.01, metric: str = "val_macro_f1_processable") -> dict:
+    col = SELECTION_METRICS[metric]
+    best_f1 = max(r[col] for r in summary)
+    tied = [r for r in summary if best_f1 - r[col] <= tie_tolerance + 1e-12]
     if len(tied) == 1:
-        chosen, reason = tied[0], "mayor F1 macro medio de validación"
+        chosen, reason = tied[0], "mayor F1 macro medio de validación" if metric == "val_macro_f1_processable" else f"mayor {metric} medio"
     else:
         chosen = min(tied, key=lambda r: (r["p95_latency_ms_mean"], r["config"]))
         reason = f"empate técnico (<= {tie_tolerance}) entre {[t['config'] for t in tied]}; gana menor p95 de inferencia"
-    return {
+    out = {
         "chosen_config": chosen["config"],
         "reason": reason,
         "best_val_macro_f1_mean": best_f1,
         "candidates_within_tolerance": [t["config"] for t in tied],
         "tie_tolerance": tie_tolerance,
     }
+    if metric != "val_macro_f1_processable":
+        out["selection_metric"] = metric  # v1 no lleva esta clave: su selection.json no cambia
+    return out
 
 
 def goals_check(summary_row: dict, goals: dict) -> dict:
@@ -120,7 +137,8 @@ def write_tables(runs: list[dict], out_dir: str | Path, cfg: dict) -> dict:
                 per_class.append({"config": r["name"], "seed": r["seed"], **row})
     _write_csv(out / "per_class_by_seed.csv", per_class)
 
-    sel = select_configuration(summary, float(cfg["selection"]["tie_tolerance"]))
+    sel = select_configuration(summary, float(cfg["selection"]["tie_tolerance"]),
+                               cfg["selection"].get("metric", "val_macro_f1_processable"))
     chosen_row = next(s for s in summary if s["config"] == sel["chosen_config"])
     sel["deployed_run"] = f"{sel['chosen_config']}__seed{cfg['deployed_seed']}"
     sel["evidence_valid"] = all(r["evidence_valid"] for r in runs)
@@ -144,12 +162,23 @@ def _write_csv(path: Path, rows: list[dict]) -> None:
 # ----------------------------------------------------------------------
 # Gráficas (desde predicciones / historiales guardados)
 # ----------------------------------------------------------------------
-def make_plots(out_dir: str | Path) -> list[Path]:
+def _grid(plt, n: int, w: float, h_per_row: float):
+    """Cuadrícula de 2 columnas para ``n`` configuraciones (v1: n=4 -> 2x2, igual que siempre)."""
+    rows = max(1, (n + 1) // 2)
+    fig, axes = plt.subplots(rows, 2, figsize=(w, h_per_row * rows), squeeze=False)
+    flat = axes.ravel()
+    for ax in flat[n:]:
+        ax.axis("off")
+    return fig, flat[:n]
+
+
+def make_plots(out_dir: str | Path, names: list[str] | None = None) -> list[Path]:
     import matplotlib
 
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
+    names = list(names or CONF_ORDER)
     out = Path(out_dir)
     runs_dir = out / "runs"
     figs = out / "figures"
@@ -157,8 +186,8 @@ def make_plots(out_dir: str | Path) -> list[Path]:
     written = []
 
     # Curvas de aprendizaje: una figura por configuración, 3 semillas.
-    fig, axes = plt.subplots(2, 2, figsize=(10, 7), sharex=False)
-    for ax, name in zip(axes.ravel(), CONF_ORDER):
+    fig, axes = _grid(plt, len(names), 10, 3.5)
+    for ax, name in zip(axes, names):
         for seed in REQUIRED_SEEDS:
             h = np.genfromtxt(runs_dir / f"{name}__seed{seed}" / "history.csv", delimiter=",", names=True)
             ax.plot(h["epoch"], h["val_macro_f1"], label=f"val F1 s{seed}")
@@ -173,8 +202,8 @@ def make_plots(out_dir: str | Path) -> list[Path]:
     written.append(p)
 
     # Matrices de confusión de validación (semilla 17) desde predicciones guardadas.
-    fig, axes = plt.subplots(2, 2, figsize=(10, 9))
-    for ax, name in zip(axes.ravel(), CONF_ORDER):
+    fig, axes = _grid(plt, len(names), 10, 4.5)
+    for ax, name in zip(axes, names):
         d = np.load(runs_dir / f"{name}__seed17" / "predictions_val.npz", allow_pickle=False)
         qp = d["quality_pass"]
         conf = M.confusion(d["y_true"][qp], np.argmax(d["probs"], 1)[qp])
@@ -194,12 +223,12 @@ def make_plots(out_dir: str | Path) -> list[Path]:
 
     # F1 macro por configuración y semilla.
     fig, ax = plt.subplots(figsize=(7, 4))
-    for k, name in enumerate(CONF_ORDER):
+    for k, name in enumerate(names):
         vals = [json.loads((runs_dir / f"{name}__seed{s}" / "metrics.json").read_text())["val"]["macro_f1_processable"] for s in REQUIRED_SEEDS]
         ax.scatter([k] * 3, vals, label=None)
         ax.hlines(np.mean(vals), k - 0.25, k + 0.25)
-    ax.set_xticks(range(4))
-    ax.set_xticklabels(CONF_ORDER, rotation=20, fontsize=8)
+    ax.set_xticks(range(len(names)))
+    ax.set_xticklabels(names, rotation=20, fontsize=8)
     ax.set_ylabel("F1 macro (validación, procesables)")
     fig.tight_layout()
     p = figs / "macro_f1_by_config_seed.png"
@@ -214,6 +243,9 @@ def make_plots(out_dir: str | Path) -> list[Path]:
 # ----------------------------------------------------------------------
 def write_freeze(out_dir: str | Path, cfg: dict, freeze_path: str | Path | None = None) -> Path:
     """Congela decisiones: habilita el uso único del test (A4)."""
+    if cfg.get("evaluation", {}).get("test_sealed"):
+        # v2: el test se abrió una sola vez con v1. Sin freeze.json, `final-eval` no puede abrirlo para v2.
+        raise RuntimeError("esta configuración tiene el test SELLADO (evaluation.test_sealed): no se congela ni se evalúa en test")
     out = Path(out_dir)
     sel_p = out / "selection.json"
     if not sel_p.is_file():
@@ -221,7 +253,9 @@ def write_freeze(out_dir: str | Path, cfg: dict, freeze_path: str | Path | None 
     sel = json.loads(sel_p.read_text(encoding="utf-8"))
     if not sel["evidence_valid"]:
         raise RuntimeError("las ejecuciones usan datos sintéticos: no se puede congelar con ellas")
-    runs = load_runs(out / "runs")  # exige las 12
+    from .config import config_names
+
+    runs = load_runs(out / "runs", config_names(cfg))  # exige todas las ejecuciones declaradas
     hashes = {}
     for r in runs:
         mp = out / "runs" / r["run_id"] / "model.keras"

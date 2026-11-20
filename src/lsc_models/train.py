@@ -57,7 +57,11 @@ def _aug_seed(seed: int, epoch: int, idx: int) -> int:
     return int(np.random.SeedSequence([seed, epoch, idx]).generate_state(1)[0])
 
 
-def augment_epoch(X: np.ndarray, seed: int, epoch: int, policy: str) -> np.ndarray:
+def augment_epoch(X: np.ndarray, seed: int, epoch: int, policy: str, params: dict | None = None) -> np.ndarray:
+    if policy == "train_v2_robust":  # modelo v2 (src/lsc_models/augment_robust.py); v1 queda intacto
+        from .augment_robust import augment_robust
+
+        return np.stack([augment_robust(X[i], _aug_seed(seed, epoch, i), params) for i in range(len(X))]).astype(np.float32)
     from src.lsc_features.augment import augment_train
 
     return np.stack([augment_train(X[i], _aug_seed(seed, epoch, i), policy) for i in range(len(X))]).astype(np.float32)
@@ -98,28 +102,46 @@ def train_one_run(spec: RunSpec, bundle: Bundle, out_dir: str | Path) -> dict:
         metrics=["accuracy"],
     )
 
+    # Solo v2: validación perturbada (robustez) para elegir la época. v1 no lo usa y su camino no cambia.
+    robust_scen = None
+    if spec.evaluation.get("robust_val"):
+        from .robustness import build_scenarios
+
+        robust_scen = build_scenarios(va_all.processable().X, int(spec.evaluation.get("robust_seed", 20261113)))
+    va_proc = va_all.processable()
+
+    def _predict(a):
+        return model.predict(a, batch_size=64, verbose=0)
+
     best = {"f1": -1.0, "loss": float("inf"), "epoch": 0, "weights": None}
     since_best = 0
     history: list[dict] = []
     for epoch in range(1, int(tcfg["max_epochs"]) + 1):
-        X_ep = augment_epoch(tr.X, spec.seed, epoch, spec.augmentation["policy"]) if spec.augment else tr.X
+        aug = spec.augmentation
+        X_ep = augment_epoch(tr.X, spec.seed, epoch, aug["policy"], aug.get("params")) if spec.augment else tr.X
         h = model.fit(X_ep, tr.y, batch_size=int(tcfg["batch_size"]), epochs=1, shuffle=True, verbose=0)
         p_val = model.predict(va_all.X, batch_size=64, verbose=0)
         ev = M.evaluate_split(va_all.y, p_val, va_all.quality_pass)
         f1, vloss = ev["macro_f1_processable"], ev["loss_processable"]
-        history.append(
-            {
-                "epoch": epoch,
-                "train_loss": float(h.history["loss"][0]),
-                "train_accuracy": float(h.history["accuracy"][0]),
-                "val_loss": vloss,
-                "val_accuracy": ev["accuracy_processable"],
-                "val_macro_f1": f1,
-            }
-        )
-        improved = (f1 > best["f1"] + 1e-12) or (abs(f1 - best["f1"]) <= 1e-12 and vloss < best["loss"])
+        row = {
+            "epoch": epoch,
+            "train_loss": float(h.history["loss"][0]),
+            "train_accuracy": float(h.history["accuracy"][0]),
+            "val_loss": vloss,
+            "val_accuracy": ev["accuracy_processable"],
+            "val_macro_f1": f1,
+        }
+        score = f1
+        if robust_scen is not None:
+            from .robustness import evaluate_scenarios, mixed_f1
+
+            rob = evaluate_scenarios(_predict, va_proc.y, robust_scen)
+            score = mixed_f1(f1, rob)
+            row.update(val_robust_f1=rob["mean"]["macro_f1"], val_mixed_f1=score)
+        history.append(row)
+        improved = (score > best["f1"] + 1e-12) or (abs(score - best["f1"]) <= 1e-12 and vloss < best["loss"])
         if improved:
-            best.update(f1=f1, loss=vloss, epoch=epoch, weights=model.get_weights())
+            best.update(f1=score, loss=vloss, epoch=epoch, weights=model.get_weights())
             since_best = 0
         else:
             since_best += 1
@@ -192,5 +214,11 @@ def train_one_run(spec: RunSpec, bundle: Bundle, out_dir: str | Path) -> dict:
         "environment": environment_info(),
         "split_used": ["train", "val"],
     }
+    if robust_scen is not None:
+        from .robustness import evaluate_scenarios, mixed_f1
+
+        rob_final = evaluate_scenarios(_predict, va_proc.y, robust_scen)
+        result["val_robust"] = rob_final
+        result["val_mixed_f1"] = mixed_f1(val_eval["macro_f1_processable"], rob_final)
     (out / "metrics.json").write_text(json.dumps(result, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     return result

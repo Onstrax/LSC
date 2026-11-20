@@ -18,6 +18,7 @@ from api.constants import (
     CAPTURE_PREP_MS,
     CAPTURE_PROTOCOL_VERSION,
     CAPTURE_WINDOW_MS,
+    DEFAULT_ARTIFACTS_DIR,
     MAX_BODY_BYTES,
     MAX_HEIGHT,
     MAX_JPEG_BYTES,
@@ -89,7 +90,7 @@ def load_settings() -> Settings:
             f"LSC_MODE debe ser '{MODE_REAL}' o '{MODE_MOCK}', no {mode!r}."
         )
 
-    artifacts_dir = Path(os.environ.get("LSC_ARTIFACTS_DIR", "artifacts")).expanduser()
+    artifacts_dir = Path(os.environ.get("LSC_ARTIFACTS_DIR", DEFAULT_ARTIFACTS_DIR)).expanduser()
     port = _env_int("LSC_PORT", 8000, lo=1, hi=65535)
     server_timeout = _env_int(
         "LSC_SERVER_TIMEOUT_MS", SERVER_JOB_TIMEOUT_MS, lo=1000, hi=120_000

@@ -24,6 +24,8 @@ class ServiceState:
     mode: str = ""
     # Diagnóstico para el operador cuando el servicio no está disponible.
     unavailable_reason: str | None = None
+    # Volcado local de intentos para diagnóstico (None = desactivado; ver api/debug_dump.py).
+    debug_dump: object | None = None
 
     @property
     def mode_label(self) -> str:

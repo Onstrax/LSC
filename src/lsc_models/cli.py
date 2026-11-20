@@ -7,6 +7,8 @@
   export-artifacts   arma artifacts/ (modelo, política, manifest) para la app en modo real
   run-app            arranca la aplicación (--mode mock|real)
   check-app          prueba por HTTP una app en marcha (o --spawn mock|real)
+  diagnose-dump      analiza los intentos guardados con `run-app --debug-dump` (qué ve el modelo en vivo)
+  robustness         compara v1 y v2 en validación perturbada (mano ausente, recorte); NO abre el test
   verify             comprueba que todo el proyecto funciona (PASS/FAIL)
   synthetic-fixture  genera el bundle sintético (SOLO pruebas de interfaz)
   run-all            las 12 ejecuciones (reanudable)
@@ -24,6 +26,7 @@ import json
 import sys
 from pathlib import Path
 
+from .app_tools import DEFAULT_APP_ARTIFACTS
 from .config import ConfigError, DEFAULT_CONFIG, load_config
 
 DEFAULT_OUT = "reports/models"
@@ -66,14 +69,33 @@ def main(argv: list[str] | None = None) -> int:
 
     ra = sub.add_parser("run-app")
     ra.add_argument("--mode", choices=["mock", "real"], default="mock")
-    ra.add_argument("--artifacts", default="artifacts")
+    ra.add_argument("--artifacts", default=DEFAULT_APP_ARTIFACTS, help="paquete del modelo; por defecto v2 (v1: --artifacts artifacts)")
     ra.add_argument("--port", type=int, default=8000)
     ra.add_argument("--open", action="store_true", help="abrir el navegador")
+    ra.add_argument("--debug-dump", nargs="?", const="artifacts/debug_dump", default=None, metavar="DIR",
+                    help="guarda localmente cada intento (6 cuadros CON ROSTRO, x y probabilidades) para diagnóstico; "
+                         "por defecto artifacts/debug_dump (ignorada por Git)")
+
+    rb = sub.add_parser("robustness")
+    rb.add_argument("--v1-reports", default=DEFAULT_OUT, help="resultados de v1 (solo lectura)")
+    rb.add_argument("--v2-reports", default="reports/models_v2")
+    rb.add_argument("--bundle", default=None, help="features.npz (por defecto, el de la configuración)")
+    rb.add_argument("--out", default=None, help="CSV de salida (por defecto <v2-reports>/robustness_comparison.csv)")
+    rb.add_argument("--only", nargs="*", default=None, help="limitar a estas configuraciones (p. ej. transformer_aug transformer_robust)")
+
+    dd = sub.add_parser("diagnose-dump")
+    dd.add_argument("--dir", default="artifacts/debug_dump")
+    dd.add_argument("--artifacts", default=DEFAULT_APP_ARTIFACTS)
+    dd.add_argument("--expect", default=None, help='seña esperada por intento, en orden: "Hola*3,Buenos*3"')
+    dd.add_argument("--no-redetect", action="store_true", help="no volver a correr MediaPipe sobre los cuadros")
+    dd.add_argument("--bundle", default=None)
+    dd.add_argument("--raw-dir", default=None, help="corpus LSC70W, para medir el tamaño de hombros de referencia")
+    dd.add_argument("--corpus-sample", type=int, default=30)
 
     ca = sub.add_parser("check-app")
     ca.add_argument("--url", default="http://127.0.0.1:8000")
     ca.add_argument("--spawn", choices=["mock", "real"], default=None, help="arrancar un servidor temporal y comprobarlo")
-    ca.add_argument("--artifacts", default="artifacts")
+    ca.add_argument("--artifacts", default=DEFAULT_APP_ARTIFACTS)
 
     dm = sub.add_parser("download-models")
     dm.add_argument("--models-dir", default=None)
@@ -138,7 +160,43 @@ def main(argv: list[str] | None = None) -> int:
         if a.cmd == "run-app":
             from .app_tools import run_app
 
-            return run_app(a.mode, a.artifacts, a.port, a.open)
+            return run_app(a.mode, a.artifacts, a.port, a.open, debug_dump=a.debug_dump)
+        if a.cmd == "robustness":
+            from .data import Bundle
+            from .robustness import compare, summarize_rows
+
+            cfg0 = load_config(DEFAULT_CONFIG)
+            bpath = a.bundle or Path(cfg0["data"]["bundle_dir"]) / cfg0["data"]["features_file"]
+            va = Bundle(bpath).load_split("val").processable()  # SOLO validación; el test no se abre
+            groups: dict[str, list[Path]] = {}
+            for tag, rep in (("v1", a.v1_reports), ("v2", a.v2_reports)):
+                for d in sorted((Path(rep) / "runs").glob("*__seed*")):
+                    name = d.name.split("__")[0]
+                    if (d / "model.keras").is_file() and (not a.only or name in a.only):
+                        groups.setdefault(f"{tag}:{name}", []).append(d)
+            if not groups:
+                print("No hay ejecuciones para comparar (¿ya entrenó v2?).", file=sys.stderr)
+                return 3
+            out_csv = Path(a.out) if a.out else Path(a.v2_reports) / "robustness_comparison.csv"
+            rows = compare(groups, va.X, va.y, out_csv)
+            summ = summarize_rows(rows)
+            cols = ["original", "sin_mano_izq", "sin_mano_der", "recorte_1.0", "recorte_0.7", "recorte_0.5",
+                    "manos_por_tramos", "escala_traslacion", "webcam_like", "MEDIA_ROBUSTA"]
+            print(f"Exactitud en validación procesable (n={len(va)}); media sobre semillas. CSV: {out_csv}")
+            print(f"{'grupo':26s} " + " ".join(f"{c[:11]:>11s}" for c in cols))
+            for g in groups:
+                vals = {r["escenario"]: r for r in summ if r["grupo"] == g}
+                print(f"{g:26s} " + " ".join(f"{vals[c]['accuracy']:>11.3f}" if c in vals else f"{'-':>11s}" for c in cols))
+            print("\nConfianza mediana (misma tabla):")
+            for g in groups:
+                vals = {r["escenario"]: r for r in summ if r["grupo"] == g}
+                print(f"{g:26s} " + " ".join(f"{vals[c]['conf_median']:>11.3f}" if c in vals else f"{'-':>11s}" for c in cols))
+            return 0
+        if a.cmd == "diagnose-dump":
+            from .diagnose import run_diagnose
+
+            return run_diagnose(a.dir, a.artifacts, a.expect, redetect=not a.no_redetect, bundle=a.bundle,
+                                raw_dir=a.raw_dir, corpus_sample=a.corpus_sample)
         if a.cmd == "check-app":
             from .app_tools import check_app, check_app_spawn
 
@@ -163,17 +221,20 @@ def main(argv: list[str] | None = None) -> int:
             run_all(a.config, a.out, bundle_path=a.bundle, only=a.only, force=a.force, fast=a.fast)
         elif a.cmd == "aggregate":
             from .ablation import load_runs, make_plots, write_tables
+            from .config import config_names
 
-            runs = load_runs(Path(a.out) / "runs")
+            names = config_names(cfg)
+            runs = load_runs(Path(a.out) / "runs", names)
             sel = write_tables(runs, a.out, cfg)
-            make_plots(a.out)
+            make_plots(a.out, names)
             print(f"selección: {sel['chosen_config']} -> {sel['deployed_run']} ({sel['reason']})")
         elif a.cmd == "sensitivity":
+            from .config import config_names
             from .data import Bundle
             from .sensitivity import run_sensitivity
 
             bpath = a.bundle or Path(cfg["data"]["bundle_dir"]) / cfg["data"]["features_file"]
-            print(run_sensitivity(Bundle(bpath), Path(a.out) / "runs", a.out, cfg, fast=a.fast))
+            print(run_sensitivity(Bundle(bpath), Path(a.out) / "runs", a.out, cfg, fast=a.fast, names=config_names(cfg)))
         elif a.cmd == "freeze":
             from .ablation import write_freeze
 

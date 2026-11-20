@@ -26,10 +26,12 @@ services:
       LSC_ALLOWED_HOSTS: "localhost,127.0.0.1"
     volumes:
       # Artefactos de Acosta (modelo) y Ortiz (.task) en SOLO LECTURA.
-      # Prepare ./artifacts con `python -m src.lsc_models export-artifacts` (y los .task) antes de arrancar
-      # en modo real. Para ver la interfaz sin modelo: LSC_MODE=mock docker compose ... up
+      # Por defecto, el modelo v2 (docs/models/v2_robusto.md): prepare ./artifacts_v2 con
+      # `python -m src.lsc_models export-artifacts --reports reports/models_v2 --out artifacts_v2` (y los .task)
+      # antes de arrancar en modo real. Para usar v1 (congelado), cambie `source` a ../artifacts.
+      # Para ver la interfaz sin modelo: LSC_MODE=mock docker compose ... up
       - type: bind
-        source: ../artifacts
+        source: ../artifacts_v2
         target: /artifacts
         read_only: true
     tmpfs:

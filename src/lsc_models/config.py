@@ -11,13 +11,14 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import yaml
 
 DEFAULT_CONFIG = Path("configs/train/experiments.yaml")
 REQUIRED_SEEDS = (17, 29, 43)
+KNOWN_POLICIES = ("train_v1", "train_v2_robust")
 # Presupuesto reducido SOLO para verificar la tubería con datos sintéticos.
 # run-all/sensitivity rechazan --fast si el bundle no es sintético.
 FAST_OVERRIDES = {
@@ -44,13 +45,15 @@ class RunSpec:
     training: dict
     augmentation: dict
     latency: dict
+    # Solo v2 (p. ej. robust_val, test_sealed). Vacío en v1: no entra al hash, así los config_hash de v1 no cambian.
+    evaluation: dict = field(default_factory=dict)
 
     @property
     def run_id(self) -> str:
         return f"{self.name}__seed{self.seed}"
 
     def to_dict(self) -> dict:
-        return {
+        d = {
             "name": self.name,
             "seed": self.seed,
             "model": self.model,
@@ -60,6 +63,9 @@ class RunSpec:
             "augmentation": self.augmentation,
             "latency": self.latency,
         }
+        if self.evaluation:
+            d["evaluation"] = self.evaluation
+        return d
 
     def config_hash(self) -> str:
         blob = json.dumps(self.to_dict(), sort_keys=True, ensure_ascii=False).encode()
@@ -91,8 +97,13 @@ def validate_config(cfg: dict) -> None:
             raise ConfigError(f"falta la sección '{key}'")
     if tuple(cfg["seeds"]) != REQUIRED_SEEDS:
         raise ConfigError(f"las semillas deben ser {REQUIRED_SEEDS}; hay {tuple(cfg['seeds'])}")
-    if tuple(cfg["configs"].keys()) != REQUIRED_CONFIGS:
-        raise ConfigError(f"las configuraciones deben ser {REQUIRED_CONFIGS}")
+    # v1 exige exactamente las 4 configuraciones del plan; v2 declara las suyas en 'required_configs'.
+    required = tuple(cfg.get("required_configs", REQUIRED_CONFIGS))
+    if tuple(cfg["configs"].keys()) != required:
+        raise ConfigError(f"las configuraciones deben ser {required}")
+    policy = cfg["augmentation"].get("policy")
+    if policy not in KNOWN_POLICIES:
+        raise ConfigError(f"política de aumentación desconocida: {policy!r} (válidas: {KNOWN_POLICIES})")
     if cfg.get("deployed_seed") != 17:
         raise ConfigError("deployed_seed debe ser 17 (regla fijada antes del test)")
     for name, entry in cfg["configs"].items():
@@ -119,6 +130,12 @@ def expand_runs(cfg: dict) -> list[RunSpec]:
                     training=copy.deepcopy(cfg["training"]),
                     augmentation=copy.deepcopy(cfg["augmentation"]),
                     latency=copy.deepcopy(cfg.get("latency", {})),
+                    evaluation=copy.deepcopy(cfg.get("evaluation", {})),
                 )
             )
     return runs
+
+
+def config_names(cfg: dict) -> list[str]:
+    """Nombres de las configuraciones en el orden del YAML (v1: las 4 del plan)."""
+    return list(cfg["configs"].keys())

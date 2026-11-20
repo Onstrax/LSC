@@ -43,3 +43,10 @@ artifacts/data/
 artifacts/models/
 reports/models_synthetic/
 *.keras
+
+# Volcado de diagnostico de la app (cuadros con rostros; NUNCA en Git)
+debug_dump/
+artifacts/debug_dump/
+
+# Paquete del modelo v2 (igual que artifacts/: no se versiona)
+artifacts_v2/

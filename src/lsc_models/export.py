@@ -122,6 +122,14 @@ def export_artifacts(
     (out / "preprocessing.json").write_text(json.dumps(prep, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
     fit = fit_threshold(saved["y_true"], saved["probs"], saved["quality_pass"])
+    fitted_on, extra = "validación (procesables) de la ejecución exportada", {}
+    if metrics.get("val_robust") is not None:
+        # v2: el umbral se ajusta sobre validación original + validación perturbada (mano ausente, recorte), a partes
+        # iguales, para que refleje la webcam. Sigue siendo SOLO validación: el test está sellado.
+        fit_orig = fit
+        fit, n_rob = _fit_threshold_mixed(Predictor(out / "model.keras"), va, saved, run)
+        fitted_on = "validación original + validación perturbada (50/50, procesables) de la ejecución exportada"
+        extra = {"fit_original_only": fit_orig, "n_perturbed_samples": n_rob}
     policy = {
         "schema_version": "lsc.thresholds.v1",
         "policy_version": f"maxsoftmax-{_sha(run / 'predictions_val.npz')[:8]}",
@@ -130,8 +138,9 @@ def export_artifacts(
         "requires_confirmation": True,  # negativos aún no medidos (A4): siempre sugerencia
         "negatives_rejection_measured": False,
         "provisional": True,
-        "fitted_on": "validación (procesables) de la ejecución exportada",
+        "fitted_on": fitted_on,
         "fit": fit,
+        **extra,
         "synthetic": synthetic,
     }
     (out / "thresholds.json").write_text(json.dumps(policy, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
@@ -171,10 +180,36 @@ def export_artifacts(
     return out
 
 
+def _fit_threshold_mixed(predictor, va, saved, run: Path) -> tuple[dict, int]:
+    """Umbral sobre validación original + perturbada con el mismo peso (la original se repite para igualar)."""
+    from .robustness import build_scenarios
+
+    cfg = json.loads((run / "config.json").read_text(encoding="utf-8")) if (run / "config.json").is_file() else {}
+    seed = int(cfg.get("evaluation", {}).get("robust_seed", 20261113))
+    vp = va.processable()
+    ys, ps = [], []
+    for Xp, ok in build_scenarios(vp.X, seed).values():
+        if ok.any():
+            ps.append(np.asarray(predictor.predict(Xp[ok]), dtype=np.float32))
+            ys.append(vp.y[ok])
+    if not ps:
+        raise ExportError("la validación perturbada no tiene muestras aceptables: no se puede ajustar el umbral de v2")
+    y_rob, p_rob = np.concatenate(ys), np.concatenate(ps)
+    q = np.asarray(saved["quality_pass"], dtype=bool)
+    y_o, p_o = np.asarray(saved["y_true"])[q], np.asarray(saved["probs"])[q]
+    reps = max(1, int(round(len(y_rob) / max(1, len(y_o)))))  # peso 50/50
+    y_all = np.concatenate([np.tile(y_o, reps), y_rob])
+    p_all = np.concatenate([np.tile(p_o, (reps, 1)), p_rob])
+    return fit_threshold(y_all, p_all, np.ones(len(y_all), dtype=bool)), int(len(y_rob))
+
+
 def _model_card(m: dict, fit: dict, version: str, synthetic: bool, run_id: str) -> str:
     banner = (
         "> **DEMO SINTÉTICA.** Entrenado con `synthetic_contract_fixture`. No reconoce LSC y no es evidencia de nada.\n\n"
         if synthetic
+        else "> Modelo **v2 (robusto)**, mejora posterior al test de v1. El test está SELLADO: no hay cifra de test para v2. "
+             "Ver `docs/models/v2_robusto.md`.\n\n"
+        if m.get("val_robust") is not None
         else "> Estado: intermedio (A3/A4 parcial). El test NO se ha usado; no hay métricas finales.\n\n"
     )
     val = (

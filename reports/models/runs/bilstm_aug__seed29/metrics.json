@@ -1,0 +1,65 @@
+{
+  "run_id": "bilstm_aug__seed29",
+  "name": "bilstm_aug",
+  "seed": 29,
+  "model": "bilstm",
+  "augment": true,
+  "config_hash": "7d44441bc86c54f01061da38fe187459ae4d3d86bf54f61b42c53e3479587a01",
+  "data": {
+    "sha256": "fcedb70650a9719e40397bcb7338ea712613e5345cf7c07aeed4fdc9fb6cb660",
+    "synthetic": false,
+    "n_total": 700,
+    "n_train": 490,
+    "n_train_quality_pass": 462,
+    "n_val": 70,
+    "n_val_quality_pass": 63
+  },
+  "evidence_valid": true,
+  "data_source": "features_v1",
+  "best_epoch": 35,
+  "epochs_run": 47,
+  "n_params": 76810,
+  "train": {
+    "n": 462,
+    "accuracy": 0.9826839826839827,
+    "macro_f1": 0.9830169167749814
+  },
+  "val": {
+    "n": 70,
+    "n_processable": 63,
+    "quality_coverage": 0.9,
+    "accuracy_processable": 0.9047619047619048,
+    "macro_f1_processable": 0.9030569430569431,
+    "loss_processable": 0.5606878399848938,
+    "accuracy_integral": 0.8142857142857143,
+    "macro_f1_integral": 0.8515917415917416
+  },
+  "baseline_majority_val": {
+    "n": 70,
+    "n_processable": 63,
+    "quality_coverage": 0.9,
+    "accuracy_processable": 0.1111111111111111,
+    "macro_f1_processable": 0.02,
+    "loss_processable": 24.56090545654297,
+    "accuracy_integral": 0.1,
+    "macro_f1_integral": 0.02,
+    "majority_class": 6
+  },
+  "latency": {
+    "p50_ms": 38.95334999833722,
+    "p95_ms": 53.70540499807243,
+    "repeats": 200
+  },
+  "runtime_s": 23.06,
+  "environment": {
+    "python": "3.12.10",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "numpy": "2.5.5",
+    "tensorflow": "2.21.0",
+    "keras": "3.15.1"
+  },
+  "split_used": [
+    "train",
+    "val"
+  ]
+}

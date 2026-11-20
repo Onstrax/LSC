@@ -59,7 +59,7 @@ envían capturas ni datos a servicios externos.
 | Cámara denegada | Revise el permiso del navegador y pulse activar de nuevo. |
 | Cámara desconectada | Reconecte la cámara y actívela otra vez. |
 | Varias personas | Deje una sola persona en el encuadre. |
-| Muestre ambas manos | Asegúrese de que se vean las dos manos y repita. |
+| Mantenga al menos una mano a la vista | Asegúrese de que se vea al menos una mano durante toda la seña y repita. |
 | Servicio ocupado | Espere un momento y vuelva a intentar. |
 | El servicio no está disponible | Avise al operador. |
 

@@ -58,7 +58,8 @@ def quality_accounting(bundle: Bundle) -> list[dict]:
     return rows
 
 
-def run_sensitivity(bundle: Bundle, runs_dir: str | Path, out_dir: str | Path, cfg: dict, *, fast: bool = False) -> Path:
+def run_sensitivity(bundle: Bundle, runs_dir: str | Path, out_dir: str | Path, cfg: dict, *, fast: bool = False,
+                    names: list[str] | None = None) -> Path:
     import keras
 
     from . import custom_layers  # noqa: F401  (registra PositionalEmbedding)
@@ -72,7 +73,7 @@ def run_sensitivity(bundle: Bundle, runs_dir: str | Path, out_dir: str | Path, c
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
     rows = []
-    for name in REQUIRED_CONFIGS:
+    for name in (names or REQUIRED_CONFIGS):
         for seed in REQUIRED_SEEDS:
             model = keras.models.load_model(Path(runs_dir) / f"{name}__seed{seed}" / "model.keras", compile=False)
             for which in ("both", "left", "right"):

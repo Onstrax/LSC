@@ -11,6 +11,7 @@ Responde en español.
 ## Comandos (siempre desde la raíz; Windows PowerShell)
 - Verificación rápida del código (sin datos reales): `python -m src.lsc_models verify`
 - Suite completa: `python -m pytest` (≈1–2 min; e2e se omite sin Playwright)
+- Usa siempre `.\.venv\Scripts\python.exe para ejecutar comandos.`
 - Flujo con datos reales: `prepare-data` → `sync-bundle-spec` → `run-all` → `aggregate` → `sensitivity` →
   `freeze` → `export-artifacts` → `final-eval` (todos con `python -m src.lsc_models <comando>`)
 - App: `python -m src.lsc_models run-app --mode mock|real --open`; comprobar: `check-app`
@@ -30,4 +31,9 @@ Responde en español.
 ## Estado conocido
 - Corregido: hash del contrato (`feature_spec_hash` = 0fdfe6b2b954…), `labels.json`, `origin_guard`, Dockerfile,
   pines de dependencias. Ver `docs/models/compat.md`.
-- Sin verificar nunca: `docker compose build/up`; cámara física real; MediaPipe real dentro del contenedor.
+- **Modelo por defecto de la app = v2** (`artifacts_v2/`, `docs/models/v2_robusto.md`), desde el 20 nov. por decisión del integrador y
+  antes de medir su exactitud etiquetada en webcam. v1 sigue congelado en `artifacts/` (cifra de test: exactitud 0,870, abierta UNA vez).
+  v2 tiene el test SELLADO: no hay cifra de test y NO se ejecuta `final-eval`/`freeze` con v2. `export-artifacts` y `final-eval`
+  siguen apuntando a v1 por defecto.
+- Verificado (nov. 2026, sesión del usuario): cámara física y MediaPipe real, fuera del contenedor.
+- Sin verificar nunca: `docker compose build/up`; MediaPipe real dentro del contenedor.

@@ -8,10 +8,13 @@ import { CameraCapture, checkBrowserSupport, selectIndices } from "./capture.js"
 import { fetchConfig, sendPredict } from "./client.js";
 import { History } from "./history.js";
 import { AttemptTimer, AttemptLog } from "./metrics.js";
+import { retryMessage, errorMessage, confidenceNote, suggestionNote } from "./messages.js";
+import { loadSignManifest, signReference, missingReferenceText } from "./signs.js";
 
 const ui = {};
 const attemptLog = new AttemptLog();
 let config = null;
+let signs = {}; // referencias visuales (app/assets/signs/manifest.json); vacío si no hay
 let camera = null;
 let sm = null;
 const history = new History();
@@ -35,12 +38,79 @@ function setBanner(mode) {
   }
 }
 
+// Muestra cómo se hace la seña elegida (imagen o video) o avisa que aún no hay referencia.
+function showSignReference(label) {
+  const ref = signReference(signs, label);
+  const box = ui.signRef;
+  box.innerHTML = "";
+  box.hidden = false;
+  const title = document.createElement("p");
+  title.className = "signref-title";
+  title.textContent = `Cómo se hace: ${label}`;
+  box.appendChild(title);
+
+  if (ref.kind === "image" || ref.kind === "video") {
+    let media;
+    if (ref.kind === "video") {
+      media = document.createElement("video");
+      media.controls = true;
+      media.loop = true;
+      media.muted = true;
+      media.playsInline = true;
+      media.setAttribute("aria-label", ref.alt);
+    } else {
+      media = document.createElement("img");
+      media.alt = ref.alt;
+      media.loading = "lazy";
+    }
+    media.className = "signref-media";
+    media.addEventListener("error", () => {
+      media.replaceWith(Object.assign(document.createElement("p"), {
+        className: "note",
+        textContent: missingReferenceText(label),
+      }));
+    });
+    media.src = ref.src;
+    box.appendChild(media);
+  } else {
+    const p = document.createElement("p");
+    p.className = "note";
+    p.textContent = missingReferenceText(label);
+    box.appendChild(p);
+  }
+  if (ref.tip) {
+    const tip = document.createElement("p");
+    tip.textContent = ref.tip;
+    box.appendChild(tip);
+  }
+  if (ref.credit) {
+    const credit = document.createElement("p");
+    credit.className = "note";
+    credit.textContent = `Fuente: ${ref.credit}`;
+    box.appendChild(credit);
+  }
+  announce(`Referencia de la seña ${label}.`);
+}
+
 function renderVocabulary(labels) {
   ui.vocabList.innerHTML = "";
+  ui.signRef.hidden = true;
   labels.forEach((label, i) => {
     const li = document.createElement("li");
-    li.textContent = label;
     li.dataset.labelId = String(i);
+    // Botón real (teclado y lector de pantalla); el texto del <li> sigue siendo solo la etiqueta.
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "vocab-btn";
+    btn.textContent = label;
+    btn.setAttribute("aria-controls", "signRef");
+    btn.setAttribute("aria-pressed", "false");
+    btn.addEventListener("click", () => {
+      ui.vocabList.querySelectorAll(".vocab-btn").forEach((b) => b.setAttribute("aria-pressed", "false"));
+      btn.setAttribute("aria-pressed", "true");
+      showSignReference(label);
+    });
+    li.appendChild(btn);
     ui.vocabList.appendChild(li);
   });
   // Poblar el selector de corrección.
@@ -241,8 +311,11 @@ async function presentResponse(response, timer) {
     sm.transition(STATES.RESULT);
     showResultPanel("accepted");
     ui.suggestionText.textContent = envelope.display_text;
-    ui.vocabNote.textContent =
-      "Sugerencia dentro del vocabulario de 10 señas. No es una verificación de significado.";
+    ui.confidenceNote.textContent = confidenceNote(envelope.confidence);
+    ui.vocabNote.textContent = suggestionNote(
+      config.labels.length,
+      config.capabilities.requires_confirmation !== false,
+    );
     const entry = history.add({
       status: "accepted",
       suggestionLabelId: envelope.label_id,
@@ -266,25 +339,6 @@ async function presentResponse(response, timer) {
     announce(ui.errorMsg.textContent);
   }
   await timer.markVisibleAfterPaint();
-}
-
-function retryMessage(codes) {
-  const c = codes || [];
-  if (c.includes("INSUFFICIENT_HANDS")) return "Muestre ambas manos y repita.";
-  if (c.includes("MULTIPLE_PEOPLE")) return "Deje una sola persona en el encuadre y repita.";
-  if (c.includes("INSUFFICIENT_POSE")) return "Acerque rostro y hombros al encuadre y repita.";
-  if (c.includes("LOW_CONFIDENCE"))
-    return "No hay una sugerencia clara. Repita la seña con calma.";
-  return "La captura necesita repetirse. Ajuste el encuadre e intente de nuevo.";
-}
-
-function errorMessage(httpStatus, codes) {
-  const c = codes || [];
-  if (c.includes("SERVICE_BUSY")) return "El servicio está ocupado. Espere un momento y reintente.";
-  if (c.includes("MODEL_UNAVAILABLE") || c.includes("CONFIG_INCOMPATIBLE"))
-    return "El servicio no está disponible. Avise al operador.";
-  if (c.includes("INFERENCE_TIMEOUT")) return "El procesamiento tardó demasiado. Intente de nuevo.";
-  return "Ocurrió un problema técnico. Intente de nuevo.";
 }
 
 function returnToReady() {
@@ -367,6 +421,7 @@ function cacheDom() {
     "banner",
     "status",
     "vocabList",
+    "signRef",
     "video",
     "countdown",
     "activateBtn",
@@ -376,6 +431,7 @@ function cacheDom() {
     "resultRetry",
     "resultError",
     "suggestionText",
+    "confidenceNote",
     "vocabNote",
     "retryMsg",
     "errorMsg",
@@ -434,6 +490,7 @@ async function init() {
     return;
   }
   setBanner(config.mode);
+  signs = await loadSignManifest();
   renderVocabulary(config.labels);
   renderHistory();
   ui.captureBtn.disabled = true;

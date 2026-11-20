@@ -67,7 +67,19 @@ class RealExtractor:
             "pose": _require(self._artifacts_dir / "pose_landmarker.task", "pose .task"),
             "hands": _require(self._artifacts_dir / "hand_landmarker.task", "hand .task"),
         }
-        self._impl = FeatureExtractor(feature_config or self._feature_spec, model_paths)
+        # FeatureExtractor NO crea el detector por sí solo: con detector=None solo comprueba que
+        # existan los .task y luego falla al extraer. Se inyecta el mismo RealDetector (MediaPipe
+        # Tasks, modo IMAGE) que usó el pipeline de datos al generar features.npz.
+        try:
+            from src.lsc_features.detector import RealDetector  # type: ignore
+
+            detector = RealDetector(model_paths["pose"], model_paths["hands"])
+        except Exception as exc:  # pragma: no cover - depende de mediapipe y artefactos reales
+            raise ArtifactError(
+                "No se pudo crear el detector real de MediaPipe (¿mediapipe instalado y .task válidos?): "
+                f"{exc}"
+            ) from exc
+        self._impl = FeatureExtractor(feature_config or self._feature_spec, model_paths, detector=detector)
 
     def extract_sequence(self, frames_rgb: list[np.ndarray]) -> FeatureResult:
         result = self._impl.extract_sequence(frames_rgb)
@@ -169,6 +181,8 @@ class RealDecisionAdapter:
 
         self._mode = str(self._policy.get("mode", "max_softmax_threshold"))
         self._threshold = float(self._policy.get("threshold", 0.0))
+        # Igual que DecisionPolicy: sin declararlo, la salida es una sugerencia a confirmar.
+        self.requires_confirmation = bool(self._policy.get("requires_confirmation", True))
 
     def decide(self, probabilities: np.ndarray) -> DecisionResult:
         if self._delegate is not None:  # pragma: no cover - depende de Acosta

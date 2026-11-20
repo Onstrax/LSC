@@ -33,9 +33,12 @@ def test_wrong_task_hash_detected(tmp_path):
         (models / f).write_bytes(b"not the real task")
     warns = []
     problems = prepare.check_prerequisites(tmp_path / "raw", models, warns)
-    # pose: hash válido y distinto -> BLOQUEA; hands: hash mal formado en el contrato -> solo aviso
-    assert len(problems) == 1 and "pose_landmarker.task" in problems[0] and "SHA-256" in problems[0]
-    assert any("hands" in w for w in warns)
+    # El contrato real ya tiene ambos hashes válidos (64 car.): pose y hands con otro SHA-256 BLOQUEAN.
+    assert len(problems) == 2
+    assert all("SHA-256" in p for p in problems)
+    assert any("pose_landmarker.task" in p for p in problems)
+    assert any("hand_landmarker.task" in p for p in problems)
+    assert warns == []
 
 
 def test_synthetic_goes_to_separate_folder_and_is_flagged(tmp_path):
@@ -82,9 +85,9 @@ def test_malformed_contract_hash_warns_but_does_not_block(tmp_path):
     assert len(w) == 1 and "hands" in w[0] and "65" in w[0]
 
 
-def test_real_contract_currently_has_the_65_char_defect_flagged():
-    # Documenta el hallazgo sobre contracts/feature_spec.json de Ortiz (no se corrige aquí).
-    assert any("hands" in w for w in prepare.contract_warnings())
+def test_real_contract_has_no_malformed_asset_hashes():
+    # El defecto de 65 caracteres ya fue corregido (docs/models/compat.md); guarda de regresión.
+    assert prepare.contract_warnings() == []
 
 
 def _spec_for(pose: bytes, hands: bytes, malformed_hands: bool = False):
@@ -141,7 +144,9 @@ def _mk_corpus(root):
     return root / "LSC70" / "LSC70" / "LSC70W"
 
 
-def test_autodetects_lsc70w_without_outer_folder(tmp_path):
+def test_autodetects_lsc70w_without_outer_folder(tmp_path, monkeypatch):
+    # Aislar del corpus real que pueda existir en el repo (DEFAULT_RAW es relativo al cwd).
+    monkeypatch.setattr(prepare, "DEFAULT_RAW", tmp_path / "no_existe")
     w = _mk_corpus(tmp_path)
     assert prepare.resolve_raw_dir(None, search_from=tmp_path).resolve() == w.resolve()
 
@@ -158,7 +163,8 @@ def test_sibling_subsets_are_ignored(tmp_path):
     assert len(found) == 1 and found[0].name == "LSC70W"
 
 
-def test_ambiguous_corpus_asks_user(tmp_path):
+def test_ambiguous_corpus_asks_user(tmp_path, monkeypatch):
+    monkeypatch.setattr(prepare, "DEFAULT_RAW", tmp_path / "no_existe")
     _mk_corpus(tmp_path / "a")
     _mk_corpus(tmp_path / "b")
     with pytest.raises(prepare.AmbiguousRawDir, match="--raw-dir"):

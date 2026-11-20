@@ -1,0 +1,38 @@
+{
+  "schema_version": "lsc.freeze.v1",
+  "chosen_config": "transformer_aug",
+  "deployed_run": "transformer_aug__seed17",
+  "selection_rule": "val_macro_f1 medio; empate <=0.01 -> menor p95; semilla 17",
+  "config_hashes": {
+    "bilstm_noaug__seed17": "b3098a24b1d434dbad8cdf6263abe3cc14b18535b437660cff6f36119f78ff1a",
+    "bilstm_noaug__seed29": "5b1d63052928ecee34a4695e076da75a408623df891dddb7774a4590612bfa44",
+    "bilstm_noaug__seed43": "b971af6b4a628a4f0ad45f9854dbb407d9a467b38a56e89e593d0ad4b4e77e8e",
+    "bilstm_aug__seed17": "8c19a6a20bd2d5f8cb2b85e75096c0b230b78a18c6e0c5e7bf043423ef3c3388",
+    "bilstm_aug__seed29": "7d44441bc86c54f01061da38fe187459ae4d3d86bf54f61b42c53e3479587a01",
+    "bilstm_aug__seed43": "ee7a308b17f9b3689776d30a87ffe9cc62f7a1e8228ab72d7b965599550cbdcf",
+    "transformer_noaug__seed17": "394dccd43f68a5518a2e876b8352e05a86efb4647b4973b6e2b563bc06c62c43",
+    "transformer_noaug__seed29": "7ddd4a624bedc4fe1b2d5267010f4c6bcd6124c1ceb4e3ea9746e7fe9ef77ec3",
+    "transformer_noaug__seed43": "0689ae0c777cd4289957ae38bdd51e196d3db77540104b3e5af8ec26995de299",
+    "transformer_aug__seed17": "31876073e5c5f2714af1ed38a2436a5b6e24ed657cbce1ec68dd5b8e22897027",
+    "transformer_aug__seed29": "6ac43bbf610b12e298d43aa1f1f931b060b552754dced79edfe48fc16fd19968",
+    "transformer_aug__seed43": "8473ea4ce80a855f9730f229e98caad80a97c0433a7742dc16d7c0e482007dd7"
+  },
+  "model_sha256": {
+    "bilstm_noaug__seed17": "dcf2bb5cf965e07689b0f693ee66c3dabe43077cbd288a4fde85c9be3d32f158",
+    "bilstm_noaug__seed29": "7d31261a292b60f11a6249608348440d96d74dd2bbd9545a2d0ab9b88127dcab",
+    "bilstm_noaug__seed43": "4721f5e02d720efec56e51d37cc38b2f0beb646c7acd28612447d81798517306",
+    "bilstm_aug__seed17": "614634a1f1cbd84ef53d9dbcf03117fbdbb8e9bffc4df6a9a86a7d8cc0ce258e",
+    "bilstm_aug__seed29": "43d3208025cfe15f7a699f5cc8fc16da65ce473e04d8a0a81a3d48bb90e70516",
+    "bilstm_aug__seed43": "caf975b274eaf09fad42142a869f68d0714ab91329765b827b29a736438314b5",
+    "transformer_noaug__seed17": "2305b4e61539467a7a9caa07cf5293838a420d18f63b774e1489560eb4769ed3",
+    "transformer_noaug__seed29": "d2bb895cf6ee692de367d72cddb8e601371fc95e52d688d5767c03d7cdf99c62",
+    "transformer_noaug__seed43": "f5a8d6e5106504dec248f7268d8e0109b485c2607cfcb0ee7c4bbe4b0a84dc29",
+    "transformer_aug__seed17": "6f8caf03323661ce354431fb7152a010504690b003d5ebc722d9ad7f2812863b",
+    "transformer_aug__seed29": "5f593034ba766ed48056c886a5d3d465ff831c55f6185fcae21e7431bca13140",
+    "transformer_aug__seed43": "1ea9be1295be83d2c51e72593a5ec9cf874500f252b48da4280bd0addf3cacc1"
+  },
+  "data_sha256": [
+    "fcedb70650a9719e40397bcb7338ea712613e5345cf7c07aeed4fdc9fb6cb660"
+  ],
+  "test_used": false
+}

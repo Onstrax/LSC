@@ -48,6 +48,9 @@ class JobResult:
     feature_spec_hash: str | None = None
     model_version: str | None = None
     timings_ms: dict = field(default_factory=dict)
+    # Solo diagnóstico (volcado local opcional); no se serializan en la respuesta HTTP.
+    x: np.ndarray | None = None  # (6, 147) que vio el modelo (o el extractor si no pasó calidad)
+    probs: np.ndarray | None = None  # (10,) probabilidades; None si no se ejecutó el clasificador
 
 
 class InferenceWorker:
@@ -93,6 +96,14 @@ class InferenceWorker:
     @property
     def feature_spec_hash(self) -> str | None:
         return getattr(self._predictor, "feature_spec_hash", None)
+
+    @property
+    def requires_confirmation(self) -> bool:
+        """La política pide presentar la salida como sugerencia a confirmar.
+
+        Por defecto ``True``: ante un adaptador que no lo declara, se asume lo prudente.
+        """
+        return bool(getattr(self._decision, "requires_confirmation", True))
 
     def verify_compatibility(self) -> None:
         """Compara el hash del feature_spec entre extractor y predictor.
@@ -162,6 +173,7 @@ class InferenceWorker:
                 feature_spec_hash=feat.feature_spec_hash,
                 model_version=self.model_version,
                 timings_ms=timings,
+                x=np.asarray(feat.x, dtype=np.float32),
             )
 
         # Advertencias no bloqueantes se conservan pero no provocan rechazo.
@@ -193,6 +205,8 @@ class InferenceWorker:
             feature_spec_hash=feat.feature_spec_hash,
             model_version=self.model_version,
             timings_ms=timings,
+            x=x,
+            probs=np.asarray(probs, dtype=np.float32).reshape(-1),
         )
 
     def shutdown(self) -> None:

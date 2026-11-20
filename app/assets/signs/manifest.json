@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "note": "Referencias visuales por seña. 'file' es un archivo de esta carpeta (png, jpg, webp, gif, svg, mp4 o webm). Mientras 'file' sea null, la interfaz muestra que la referencia aún no está disponible. Lea README.md antes de agregar archivos.",
+  "signs": {
+    "Hola":   { "file": null, "alt": null, "tip": null, "credit": null },
+    "Buenos": { "file": null, "alt": null, "tip": null, "credit": null },
+    "Días":   { "file": null, "alt": null, "tip": null, "credit": null },
+    "Tardes": { "file": null, "alt": null, "tip": null, "credit": null },
+    "Noches": { "file": null, "alt": null, "tip": null, "credit": null },
+    "Yo":     { "file": null, "alt": null, "tip": null, "credit": null },
+    "Nombre": { "file": null, "alt": null, "tip": null, "credit": null },
+    "Años":   { "file": null, "alt": null, "tip": null, "credit": null },
+    "Gustar": { "file": null, "alt": null, "tip": null, "credit": null },
+    "Licor":  { "file": null, "alt": null, "tip": null, "credit": null }
+  }
+}

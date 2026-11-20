@@ -259,6 +259,30 @@ def test_config_labels_order(client):
     assert "limits" in body and "capture_protocol" in body
 
 
+def test_config_exposes_requires_confirmation(client):
+    # La política pide presentar la salida como sugerencia a confirmar (regla 5).
+    caps = client.get("/api/v1/config").json()["capabilities"]
+    assert caps["requires_confirmation"] is True
+
+
+def test_worker_requires_confirmation_defaults_to_true_and_follows_policy():
+    from api.worker import InferenceWorker
+
+    class _Decision:  # no declara requires_confirmation -> se asume lo prudente
+        policy_version = "x"
+
+    def _worker(decision):
+        return InferenceWorker(
+            extractor=MockExtractor(), predictor=MockPredictor(), decision=decision, job_timeout_ms=1000
+        )
+
+    assert _worker(_Decision()).requires_confirmation is True
+    d = _Decision()
+    d.requires_confirmation = False
+    assert _worker(d).requires_confirmation is False
+    assert _worker(MockDecisionAdapter()).requires_confirmation is True
+
+
 # ---------------------------------------------------------------------------
 # Dobles auxiliares
 # ---------------------------------------------------------------------------

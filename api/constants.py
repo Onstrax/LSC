@@ -52,6 +52,11 @@ CAPTURE_MAX_FPS = 30         # muestras por segundo máximas
 MODE_REAL = "real"
 MODE_MOCK = "mock"
 
+# Paquete de modelo que carga la app por defecto. Desde 2026-11-20 es el modelo v2 (robusto; docs/models/v2_robusto.md).
+# v1 (congelado, con cifra de test) sigue intacto en `artifacts/`; se usa con LSC_ARTIFACTS_DIR=artifacts o `--artifacts artifacts`.
+# Debe coincidir con DEFAULT_APP_ARTIFACTS (src/lsc_models/app_tools.py) y con deployment/compose.yaml: lo vigila una prueba.
+DEFAULT_ARTIFACTS_DIR = "artifacts_v2"
+
 # --- Estados de respuesta --------------------------------------------------
 STATUS_ACCEPTED = "accepted"
 STATUS_RETRY = "retry"

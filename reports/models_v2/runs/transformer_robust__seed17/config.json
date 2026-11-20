@@ -1,0 +1,60 @@
+{
+  "name": "transformer_robust",
+  "seed": 17,
+  "model": "transformer",
+  "augment": true,
+  "model_params": {
+    "d_model": 64,
+    "num_heads": 4,
+    "num_blocks": 2,
+    "ff_dim": 128,
+    "dropout": 0.2
+  },
+  "training": {
+    "optimizer": "adam",
+    "learning_rate": 0.001,
+    "batch_size": 32,
+    "max_epochs": 80,
+    "patience": 12,
+    "min_epochs": 5,
+    "monitor": "val_mixed_f1",
+    "restore_best": true
+  },
+  "augmentation": {
+    "policy": "train_v2_robust",
+    "params": {
+      "p_affine": 0.5,
+      "scale_range": [
+        0.85,
+        1.2
+      ],
+      "shift": 0.1,
+      "rot_deg": 8.0,
+      "p_noise": 0.5,
+      "noise_std": 0.01,
+      "p_temporal": 0.15,
+      "p_crop_y": 0.5,
+      "crop_y_range": [
+        0.5,
+        1.3
+      ],
+      "p_crop_x": 0.3,
+      "crop_x_range": [
+        0.9,
+        1.8
+      ],
+      "p_drop_hand": 0.3,
+      "p_frame_drop": 0.1,
+      "max_retries": 4
+    }
+  },
+  "latency": {
+    "warmup": 20,
+    "repeats": 200
+  },
+  "evaluation": {
+    "robust_val": true,
+    "robust_seed": 20261113,
+    "test_sealed": true
+  }
+}

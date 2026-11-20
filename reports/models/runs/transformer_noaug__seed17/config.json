@@ -1,0 +1,30 @@
+{
+  "name": "transformer_noaug",
+  "seed": 17,
+  "model": "transformer",
+  "augment": false,
+  "model_params": {
+    "d_model": 64,
+    "num_heads": 4,
+    "num_blocks": 2,
+    "ff_dim": 128,
+    "dropout": 0.2
+  },
+  "training": {
+    "optimizer": "adam",
+    "learning_rate": 0.001,
+    "batch_size": 32,
+    "max_epochs": 80,
+    "patience": 12,
+    "min_epochs": 5,
+    "monitor": "val_macro_f1",
+    "restore_best": true
+  },
+  "augmentation": {
+    "policy": "train_v1"
+  },
+  "latency": {
+    "warmup": 20,
+    "repeats": 200
+  }
+}
