@@ -60,7 +60,16 @@ construcción del paquete (`pip wheel`).
 
 **Sigue sin verificarse:**
 - la prueba de lados (espejo) con un marcador izquierda/derecha; la cámara simulada no la certifica;
-- la cámara física a través del contenedor, y la instalación limpia en Python 3.11.
+- la cámara física a través del contenedor, y Python 3.11 **nativo en Windows** (el equipo tiene una entrada huérfana de 3.11 que apunta a una
+  carpeta inexistente).
+
+**Instalación limpia en Python 3.11 (20 nov. 2026, contenedor `python:3.11-slim`, Linux):** `pip install -e ".[features,train,app,dev]"` terminó sin
+conflictos (`pip check` OK, 707 s); `python -m pytest`: 305 aprobadas, 29 omitidas (todas por falta de Node en el contenedor; la prueba de «Python 3.11
+esperado», antes omitida en 3.12, ahora pasa); `verify`: 10/10 en la app simulada y los 12 pasos de tubería OK. Lock en
+`deployment/requirements-lock-py311.txt`. Versiones notables: tensorflow-cpu 2.21.0, keras 3.15.1, mediapipe 1.2.3, numpy 2.4.6.
+Diferencia con la imagen Docker: ésta instala mediapipe 0.10.35 (`serve` fija `<0.11`) y el desarrollo usa 1.2.3. En 4 secuencias del corpus,
+la máscara de puntos coincide en el 100 % (1 050/1 050), |Δ| máx = 0,0005 unidades de hombro y las predicciones de v2 coinciden (diferencia de
+probabilidad 0,000). Muestra pequeña y del corpus (no de webcam).
 
 ## Pendiente de decisión (no bloquea)
 

@@ -42,4 +42,8 @@ Responde en español.
 - Verificado (nov. 2026, sesión del usuario): cámara física y MediaPipe real, fuera del contenedor.
 - Verificado (20 nov. 2026): `docker compose build/up` con el modelo v2 montado; MediaPipe real dentro del contenedor; `check_ready.py` LISTO y
   `check-app` 8/8 contra el contenedor (predicción ≈ 0,2 s en régimen). Para eso hubo que añadir `libgles2`/`libegl1` al Dockerfile y corregir
-  el `.dockerignore` (una prueba lo vigila). Sigue sin verificarse: instalación limpia en Python 3.11 y la cámara física a través del contenedor.
+  el `.dockerignore` (una prueba lo vigila).
+- Verificado (20 nov. 2026): **instalación limpia en Python 3.11.18** (contenedor python:3.11-slim, Linux): `pip install -e ".[features,train,app,dev]"`
+  sin conflictos (`pip check`), 305 pruebas aprobadas (29 omitidas por falta de Node en el contenedor) y `verify` 10/10. Lock: `deployment/requirements-lock-py311.txt`.
+  La imagen Docker usa mediapipe 0.10.35 y el desarrollo 1.2.3; se midió que las características coinciden (|Δ| máx 0,0005) y las predicciones también.
+  Sigue sin verificarse: Python 3.11 nativo en Windows (este equipo tiene una entrada huérfana de 3.11 en `C:\Python311`, que no existe) y la cámara física a través del contenedor.
