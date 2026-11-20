@@ -241,11 +241,21 @@ def make_plots(out_dir: str | Path, names: list[str] | None = None) -> list[Path
 # ----------------------------------------------------------------------
 # Congelación (18 nov.)
 # ----------------------------------------------------------------------
-def write_freeze(out_dir: str | Path, cfg: dict, freeze_path: str | Path | None = None) -> Path:
-    """Congela decisiones: habilita el uso único del test (A4)."""
+def write_freeze(out_dir: str | Path, cfg: dict, freeze_path: str | Path | None = None, *,
+                 v1_test_evaluation: str | Path | None = None) -> Path:
+    """Congela decisiones: habilita el uso único del test (A4).
+
+    Una configuración con el test SELLADO (v2) solo se congela con una autorización explícita de segundo uso
+    (``test_authorization.json``, ver ``test_authorization.py``); la autorización queda copiada en ``freeze.json``.
+    """
+    second_use = None
     if cfg.get("evaluation", {}).get("test_sealed"):
-        # v2: el test se abrió una sola vez con v1. Sin freeze.json, `final-eval` no puede abrirlo para v2.
-        raise RuntimeError("esta configuración tiene el test SELLADO (evaluation.test_sealed): no se congela ni se evalúa en test")
+        from .test_authorization import V1_TEST_EVALUATION, TestAuthorizationError, require_valid_authorization
+
+        try:
+            second_use = require_valid_authorization(out_dir, v1_test_evaluation or V1_TEST_EVALUATION)
+        except TestAuthorizationError as exc:
+            raise RuntimeError(str(exc)) from exc
     out = Path(out_dir)
     sel_p = out / "selection.json"
     if not sel_p.is_file():
@@ -270,6 +280,8 @@ def write_freeze(out_dir: str | Path, cfg: dict, freeze_path: str | Path | None 
         "data_sha256": sel["data_sha256"],
         "test_used": False,
     }
+    if second_use is not None:
+        doc["test_second_use"] = second_use  # v2: el test ya se había abierto con v1; queda declarado
     path = Path(freeze_path) if freeze_path else out / "freeze.json"
     path.write_text(json.dumps(doc, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     return path

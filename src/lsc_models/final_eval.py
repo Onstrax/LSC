@@ -150,6 +150,11 @@ def run_final_eval(reports_dir, artifacts_dir, bundle_path, cfg: dict, *, allow_
         "negatives_rejection": "NO MEDIDO (requiere capturas de negativos); la interfaz debe presentar sugerencias a confirmar",
         "test_used_once": True,
     }
+    second_use = freeze.get("test_second_use")
+    if second_use:  # solo v2: v1 no lleva estas claves
+        result["test_used_once"] = True  # para ESTE modelo; el split ya se había abierto con v1
+        result["split_use_number"] = 2
+        result["test_second_use"] = {k: second_use[k] for k in ("authorized_at_utc", "reason", "first_use", "declaration")}
     out_json.write_text(json.dumps(result, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
     # --- el paquete refleja que el test ya se usó ------------------------------------
@@ -165,7 +170,9 @@ def run_final_eval(reports_dir, artifacts_dir, bundle_path, cfg: dict, *, allow_
         + f"exactitud {d['accuracy_integral']:.3f}.\n"
         + f"- Aceptación con umbral {threshold:.4f}: cobertura {d['acceptance']['coverage_processable']:.3f}, "
         + f"exactitud entre aceptados {d['acceptance']['accuracy_among_accepted']:.3f}.\n"
-        + "- Rechazo de negativos: no medido.\n",
+        + "- Rechazo de negativos: no medido.\n"
+        + ("- **Segundo uso del split de test**: el primero fue con v1 (`reports/models/test_evaluation.json`); "
+           "ver `test_authorization.json`. Deja de ser una evaluación única.\n" if second_use else ""),
         encoding="utf-8",
     )
     manifest["files_sha256"]["model_card.md"] = _sha(card)

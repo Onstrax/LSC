@@ -19,9 +19,12 @@ Responde en español.
 ## Reglas que NO se negocian
 1. **El split `test` se abre UNA sola vez**, con `final-eval`, después de `freeze`. Nunca ajustar nada con él.
    Si algo cambia las predicciones después de `freeze`, hay que declararlo (prueba intacta invalidada).
+   **Excepción declarada (20 nov. 2026):** el integrador autorizó un SEGUNDO uso del test, para v2
+   (`reports/models_v2/test_authorization.json`). Ya se usó; **no hay un tercer uso**: no ejecutar `final-eval` otra vez,
+   ni con v1 ni con v2, y no ajustar nada con el test. El artículo debe declarar los dos usos.
 2. **No inventar datos, métricas, pesos, participantes ni consentimientos.** Si falta un archivo, decirlo.
    Los datos `synthetic_contract_fixture` nunca son evidencia y nunca van al artículo.
-3. Cada cifra del artículo debe salir de un archivo de `reports/models/` (reproducible).
+3. Cada cifra del artículo debe salir de un archivo de `reports/models/` o `reports/models_v2/` (reproducible).
 4. Separar siempre: exactitud sobre procesables, desempeño integral (rechazos cuentan como error) y rechazo
    de negativos. Las metas (acc ≥ 0,85; F1 macro ≥ 0,80; p95 < 2 s) no son resultados; informar el resultado real.
 5. La probabilidad softmax no es certeza: la interfaz muestra "sugerencia" y el usuario confirma.
@@ -31,9 +34,10 @@ Responde en español.
 ## Estado conocido
 - Corregido: hash del contrato (`feature_spec_hash` = 0fdfe6b2b954…), `labels.json`, `origin_guard`, Dockerfile,
   pines de dependencias. Ver `docs/models/compat.md`.
-- **Modelo por defecto de la app = v2** (`artifacts_v2/`, `docs/models/v2_robusto.md`), desde el 20 nov. por decisión del integrador y
-  antes de medir su exactitud etiquetada en webcam. v1 sigue congelado en `artifacts/` (cifra de test: exactitud 0,870, abierta UNA vez).
-  v2 tiene el test SELLADO: no hay cifra de test y NO se ejecuta `final-eval`/`freeze` con v2. `export-artifacts` y `final-eval`
-  siguen apuntando a v1 por defecto.
+- **Modelo OFICIAL y por defecto de la app = v2** (`artifacts_v2/`, `reports/models_v2/`, `docs/models/v2_robusto.md`), desde el 20 nov.
+  por decisión del integrador. Test (131 procesables): v2 exactitud 0,931 / F1 0,931 (3 semillas: 0,921 ± 0,009); v1 0,870 / 0,872
+  (3 semillas: 0,878 ± 0,008). Comparación pareada: p = 0,021 (`reports/models_v2/paired_test_comparison.json`). v1 queda como línea base
+  congelada en `artifacts/`. `export-artifacts` y `final-eval` siguen apuntando a v1 por defecto (no pisar v1 por accidente).
+- Pendiente de medir: exactitud etiquetada en webcam de v2 (falta el orden real de la sesión), rechazo de negativos, personas ajenas al corpus.
 - Verificado (nov. 2026, sesión del usuario): cámara física y MediaPipe real, fuera del contenedor.
 - Sin verificar nunca: `docker compose build/up`; MediaPipe real dentro del contenedor.

@@ -1,0 +1,39 @@
+{
+  "schema_version": "lsc.freeze.v1",
+  "chosen_config": "bilstm_robust",
+  "deployed_run": "bilstm_robust__seed17",
+  "selection_rule": "val_macro_f1 medio; empate <=0.01 -> menor p95; semilla 17",
+  "config_hashes": {
+    "bilstm_robust__seed17": "b62c17962b393cdcaf72693d931c41d88fab7a16b47f5800cd184946c069a84a",
+    "bilstm_robust__seed29": "a7c974cd3ff13a923827ecdaa7f982fce55a0a06a0b782be1dabc69a5a11438a",
+    "bilstm_robust__seed43": "23a63b451e619b0455549370c9c715e8d16e5f27aca444d719c438f54b518ed7",
+    "transformer_robust__seed17": "d9820379a6a4130228d3955af86b513a5d3e9d846af7bedceedccf227472a6a5",
+    "transformer_robust__seed29": "10c6b9589184483b8ef89e50ba80f6495734ac6bc0d2911a22dc61983bf87407",
+    "transformer_robust__seed43": "f52e1236cad06d099ffbdc83ca03f62adc558016c893f10a42e771186058ad3f"
+  },
+  "model_sha256": {
+    "bilstm_robust__seed17": "fe2c03d8cf03523fe75b839ef59cdd1df226e93d1cb98b44278795b1d21c484a",
+    "bilstm_robust__seed29": "6d74adf2aed395e805fcf4f682e7ecaef25da9ec527056ef41f83fd5cb4f28fd",
+    "bilstm_robust__seed43": "99cd720191a7acd57c733aaa5cc212bb22172b867c17ffd89a7ba206524249fc",
+    "transformer_robust__seed17": "2817576284e007dd438a22d10206c8671670e229ecc177b514c652c628811da6",
+    "transformer_robust__seed29": "d28e272295cbf0c976d664bfec933c2a7eb3668b6a4b98f4946b2c91597b31d7",
+    "transformer_robust__seed43": "94ee8cd298e072652fb66b67380f8ec499b879843c5d943e03d7a40e2aa51c8a"
+  },
+  "data_sha256": [
+    "fcedb70650a9719e40397bcb7338ea712613e5345cf7c07aeed4fdc9fb6cb660"
+  ],
+  "test_used": false,
+  "test_second_use": {
+    "schema_version": "lsc.test_authorization.v1",
+    "authorized_at_utc": "2026-11-20T02:25:59Z",
+    "authorized_by": "integrador del proyecto (Acosta)",
+    "reason": "Decisión del integrador del proyecto: hacer de v2 el modelo oficial, con cifra de test propia. Segundo uso del split; el primero fue con v1.",
+    "split_use_number": 2,
+    "first_use": {
+      "model": "v1",
+      "file": "reports/models/test_evaluation.json",
+      "sha256": "ec5b507a4280ebed7a444efba74dea1e6a022c8b510f2e70c74bec50ef39e66e"
+    },
+    "declaration": "El split test se abrió antes con v1 (primer uso). Al diseñar v2 se conocían las cifras de ese resultado, pero ninguna decisión de v2 (aumentación, rangos, escenarios de robustez, selección, umbral) se basó en predicciones ni en métricas de test: se tomaron con el corpus de entrenamiento, la validación y capturas de webcam. Este es un segundo uso declarado; deja de ser una evaluación única y así debe informarse."
+  }
+}

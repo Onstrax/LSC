@@ -1,0 +1,13 @@
+{
+  "schema_version": "lsc.test_authorization.v1",
+  "authorized_at_utc": "2026-11-20T02:25:59Z",
+  "authorized_by": "integrador del proyecto (Acosta)",
+  "reason": "Decisión del integrador del proyecto: hacer de v2 el modelo oficial, con cifra de test propia. Segundo uso del split; el primero fue con v1.",
+  "split_use_number": 2,
+  "first_use": {
+    "model": "v1",
+    "file": "reports/models/test_evaluation.json",
+    "sha256": "ec5b507a4280ebed7a444efba74dea1e6a022c8b510f2e70c74bec50ef39e66e"
+  },
+  "declaration": "El split test se abrió antes con v1 (primer uso). Al diseñar v2 se conocían las cifras de ese resultado, pero ninguna decisión de v2 (aumentación, rangos, escenarios de robustez, selección, umbral) se basó en predicciones ni en métricas de test: se tomaron con el corpus de entrenamiento, la validación y capturas de webcam. Este es un segundo uso declarado; deja de ser una evaluación única y así debe informarse."
+}

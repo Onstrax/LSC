@@ -211,7 +211,73 @@ def test_model_card_of_a_real_v2_says_the_test_is_sealed():
     assert "SELLADO" not in _model_card(m, fit, "v", False, "x")                          # v1 no cambia
 
 
-def test_v2_can_never_be_frozen_so_its_test_stays_sealed(v2_runs):
+def test_v2_without_authorization_stays_sealed(v2_runs):
     with pytest.raises(RuntimeError, match="SELLADO"):
         write_freeze(v2_runs, load_config(V2))
     assert not (v2_runs / "freeze.json").exists()
+
+
+# --- segundo uso autorizado del test (decisión explícita del integrador) --------------------------
+def _real_looking_copy(v2_runs, tmp_path, name):
+    """Copia de la carpeta sintética con selection.json marcado como evidencia real (solo para probar el congelamiento)."""
+    import shutil
+
+    cfg = load_config(V2)
+    write_tables(load_runs(v2_runs / "runs", config_names(cfg)), v2_runs, cfg)
+    dst = tmp_path / name
+    shutil.copytree(v2_runs, dst)
+    sel = json.loads((dst / "selection.json").read_text(encoding="utf-8"))
+    sel["evidence_valid"] = True
+    (dst / "selection.json").write_text(json.dumps(sel), encoding="utf-8")
+    (dst / "test_authorization.json").unlink(missing_ok=True)
+    return dst
+
+
+def test_authorization_needs_confirmation_reason_and_the_v1_test_file(tmp_path):
+    from src.lsc_models.test_authorization import TestAuthorizationError, authorize_second_test_use
+
+    v1 = tmp_path / "v1_test_evaluation.json"
+    v1.write_text('{"x": 1}', encoding="utf-8")
+    with pytest.raises(TestAuthorizationError, match="confirmación"):
+        authorize_second_test_use(tmp_path, "motivo suficientemente largo", confirm=False, v1_test_evaluation=v1)
+    with pytest.raises(TestAuthorizationError, match="motivo"):
+        authorize_second_test_use(tmp_path, "corto", confirm=True, v1_test_evaluation=v1)
+    with pytest.raises(TestAuthorizationError, match="no existe"):
+        authorize_second_test_use(tmp_path, "motivo suficientemente largo", confirm=True, v1_test_evaluation=tmp_path / "nada.json")
+    p = authorize_second_test_use(tmp_path, "motivo suficientemente largo", confirm=True, v1_test_evaluation=v1)
+    doc = json.loads(p.read_text(encoding="utf-8"))
+    assert doc["split_use_number"] == 2 and doc["first_use"]["model"] == "v1" and len(doc["first_use"]["sha256"]) == 64
+    assert "segundo uso" in doc["declaration"].lower()
+    with pytest.raises(TestAuthorizationError, match="ya existe"):                     # no se reescribe
+        authorize_second_test_use(tmp_path, "motivo suficientemente largo", confirm=True, v1_test_evaluation=v1)
+
+
+def test_freeze_with_a_valid_authorization_declares_the_second_use(v2_runs, tmp_path):
+    from src.lsc_models.test_authorization import authorize_second_test_use
+
+    v1 = tmp_path / "v1_test_evaluation.json"
+    v1.write_text('{"x": 1}', encoding="utf-8")
+    dst = _real_looking_copy(v2_runs, tmp_path, "ok")
+    authorize_second_test_use(dst, "decisión del integrador para evaluar v2", confirm=True, v1_test_evaluation=v1)
+    path = write_freeze(dst, load_config(V2), v1_test_evaluation=v1)
+    frz = json.loads(path.read_text(encoding="utf-8"))
+    assert frz["test_used"] is False and frz["test_second_use"]["split_use_number"] == 2
+    assert frz["deployed_run"].endswith("__seed17")
+
+
+def test_authorization_is_void_if_the_v1_test_evaluation_changes(v2_runs, tmp_path):
+    from src.lsc_models.test_authorization import authorize_second_test_use
+
+    v1 = tmp_path / "v1_test_evaluation.json"
+    v1.write_text('{"x": 1}', encoding="utf-8")
+    dst = _real_looking_copy(v2_runs, tmp_path, "tampered")
+    authorize_second_test_use(dst, "decisión del integrador para evaluar v2", confirm=True, v1_test_evaluation=v1)
+    v1.write_text('{"x": 2}', encoding="utf-8")                                        # el resultado de v1 cambió
+    with pytest.raises(RuntimeError, match="no corresponde"):
+        write_freeze(dst, load_config(V2), v1_test_evaluation=v1)
+    assert not (dst / "freeze.json").exists()
+
+
+def test_v1_freeze_path_is_unchanged_and_needs_no_authorization():
+    cfg = load_config(V1)
+    assert not cfg.get("evaluation", {}).get("test_sealed")

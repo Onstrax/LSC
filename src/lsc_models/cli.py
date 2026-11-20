@@ -9,6 +9,8 @@
   check-app          prueba por HTTP una app en marcha (o --spawn mock|real)
   diagnose-dump      analiza los intentos guardados con `run-app --debug-dump` (qué ve el modelo en vivo)
   robustness         compara v1 y v2 en validación perturbada (mano ausente, recorte); NO abre el test
+  authorize-test     autoriza (con constancia) un SEGUNDO uso del test para v2; sin esto v2 sigue sellado
+  compare-test       compara v1 y v2 de forma pareada con las predicciones de test YA guardadas (no reevalúa)
   verify             comprueba que todo el proyecto funciona (PASS/FAIL)
   synthetic-fixture  genera el bundle sintético (SOLO pruebas de interfaz)
   run-all            las 12 ejecuciones (reanudable)
@@ -75,6 +77,16 @@ def main(argv: list[str] | None = None) -> int:
     ra.add_argument("--debug-dump", nargs="?", const="artifacts/debug_dump", default=None, metavar="DIR",
                     help="guarda localmente cada intento (6 cuadros CON ROSTRO, x y probabilidades) para diagnóstico; "
                          "por defecto artifacts/debug_dump (ignorada por Git)")
+
+    at = sub.add_parser("authorize-test")
+    at.add_argument("--reports", default="reports/models_v2", help="carpeta de resultados de v2")
+    at.add_argument("--reason", required=True, help="motivo; queda registrado en test_authorization.json")
+    at.add_argument("--confirm-second-use", action="store_true",
+                    help="confirma que es un SEGUNDO uso del split de test (el primero fue con v1)")
+
+    ct = sub.add_parser("compare-test")
+    ct.add_argument("--v1-reports", default=DEFAULT_OUT)
+    ct.add_argument("--v2-reports", default="reports/models_v2")
 
     rb = sub.add_parser("robustness")
     rb.add_argument("--v1-reports", default=DEFAULT_OUT, help="resultados de v1 (solo lectura)")
@@ -161,6 +173,21 @@ def main(argv: list[str] | None = None) -> int:
             from .app_tools import run_app
 
             return run_app(a.mode, a.artifacts, a.port, a.open, debug_dump=a.debug_dump)
+        if a.cmd == "authorize-test":
+            from .test_authorization import TestAuthorizationError, authorize_second_test_use
+
+            try:
+                p = authorize_second_test_use(a.reports, a.reason, confirm=a.confirm_second_use)
+            except TestAuthorizationError as exc:
+                print(f"autorización rechazada: {exc}", file=sys.stderr)
+                return 2
+            print(f"{p}: SEGUNDO uso del test autorizado para v2. Siguiente: `freeze` y `final-eval` (una sola vez) con la config v2.")
+            return 0
+        if a.cmd == "compare-test":
+            from .paired import write_paired_comparison
+
+            print(write_paired_comparison(a.v1_reports, a.v2_reports))  # lee predicciones ya guardadas; no reevalúa
+            return 0
         if a.cmd == "robustness":
             from .data import Bundle
             from .robustness import compare, summarize_rows

@@ -1,0 +1,24 @@
+{
+  "schema_version": "lsc.paired_test_comparison.v1",
+  "a": "v1 (reports/models, modelo desplegado de v1)",
+  "b": "v2 (reports/models_v2, modelo desplegado de v2)",
+  "source": "predictions_test_deployed.npz de cada carpeta (guardadas por final-eval; no se reevaluó nada)",
+  "note": "Test usado dos veces: primero v1, luego v2 (ver reports/models_v2/test_authorization.json).",
+  "n_processable": 131,
+  "correct_a": 114,
+  "correct_b": 122,
+  "both_correct": 113,
+  "only_a_correct": 1,
+  "only_b_correct": 9,
+  "none_correct": 8,
+  "accuracy_a": 0.8702290076335878,
+  "accuracy_b": 0.9312977099236641,
+  "difference_b_minus_a": 0.06106870229007633,
+  "bootstrap_ci95": [
+    0.01526717557251911,
+    0.10687022900763365
+  ],
+  "mcnemar_exact_p_two_sided": 0.021484375,
+  "n_bootstrap": 5000,
+  "bootstrap_seed": 0
+}
