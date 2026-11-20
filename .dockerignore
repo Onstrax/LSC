@@ -27,3 +27,10 @@ Speak in Colombian Sign Language*/
 artifacts/
 .github/
 *.keras
+
+# Modelo v2 (se monta, no se hornea) y capturas de diagnostico con rostros: nunca al contexto de build
+artifacts_v2/
+# Carpetas de diagnostico (contienen rostros). Nombres de CARPETA exactos: un comodin como `debug_dump*` tambien
+# excluiria api/debug_dump.py (codigo que el Dockerfile necesita) porque Docker ignora la barra final.
+**/debug_dump
+**/debug_dump_*

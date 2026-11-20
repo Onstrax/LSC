@@ -37,6 +37,13 @@ COPY pyproject.toml /app/pyproject.toml
 RUN pip install --upgrade pip \
     && pip install ".[serve]"
 
+# MediaPipe Tasks (detector real) carga libGLESv2/libEGL del sistema; sin ellas el servicio queda en 503
+# ("libGLESv2.so.2: cannot open shared object file"). Verificado al construir la imagen por primera vez (20 nov. 2026).
+# Va DESPUÉS del pip install solo para no invalidar esa capa (TensorFlow pesa ~270 MB).
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libgles2 libegl1 \
+    && rm -rf /var/lib/apt/lists/*
+
 # Código: API y UI (Juan), extractor (Ortiz), Predictor/DecisionPolicy y capas Keras (Acosta), contratos.
 COPY api/ /app/api/
 COPY app/ /app/app/

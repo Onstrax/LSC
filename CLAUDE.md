@@ -40,4 +40,6 @@ Responde en español.
   congelada en `artifacts/`. `export-artifacts` y `final-eval` siguen apuntando a v1 por defecto (no pisar v1 por accidente).
 - Pendiente de medir: exactitud etiquetada en webcam de v2 (falta el orden real de la sesión), rechazo de negativos, personas ajenas al corpus.
 - Verificado (nov. 2026, sesión del usuario): cámara física y MediaPipe real, fuera del contenedor.
-- Sin verificar nunca: `docker compose build/up`; MediaPipe real dentro del contenedor.
+- Verificado (20 nov. 2026): `docker compose build/up` con el modelo v2 montado; MediaPipe real dentro del contenedor; `check_ready.py` LISTO y
+  `check-app` 8/8 contra el contenedor (predicción ≈ 0,2 s en régimen). Para eso hubo que añadir `libgles2`/`libegl1` al Dockerfile y corregir
+  el `.dockerignore` (una prueba lo vigila). Sigue sin verificarse: instalación limpia en Python 3.11 y la cámara física a través del contenedor.

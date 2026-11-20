@@ -51,10 +51,16 @@ Verificado: suite completa (incluidas las 7 pruebas e2e en **Chromium real con c
 con modelo exportado y extractor simulado; cierre de importaciones usando solo las carpetas que copia la imagen;
 construcción del paquete (`pip wheel`).
 
-**No verificado** (no hay Docker, cámara física ni los `.task` en el entorno de desarrollo del asistente):
-- `docker compose build/up` (la imagen no se ha construido nunca);
-- la cámara física y la prueba de lados (espejo) con una persona real; la cámara simulada no las certifica;
-- el servicio en modo real con **MediaPipe real** (necesita los `.task`; lo prueba el equipo con `check-app`).
+**Verificado después (20 nov. 2026, en el equipo del integrador):**
+- `docker compose build/up` con el modelo v2 montado: LISTO según `deployment/check_ready.py`, `check-app` 8/8 y predicción ≈ 0,2 s en régimen.
+  Falló al principio por dos defectos que solo aparecieron al construir: faltaban `libgles2`/`libegl1` en la imagen (MediaPipe, 503) y un patrón
+  de `.dockerignore` excluía `api/debug_dump.py`; ambos corregidos (el segundo con una prueba de regresión).
+- el servicio en modo real con **MediaPipe real**, tanto fuera como dentro del contenedor;
+- la cámara física con una persona real (sesión de webcam fuera del contenedor).
+
+**Sigue sin verificarse:**
+- la prueba de lados (espejo) con un marcador izquierda/derecha; la cámara simulada no la certifica;
+- la cámara física a través del contenedor, y la instalación limpia en Python 3.11.
 
 ## Pendiente de decisión (no bloquea)
 
